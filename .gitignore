@@ -1,0 +1,49 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+*.egg
+.eggs/
+venv/
+env/
+.env
+
+# Model files
+backend/saved_model/*.h5
+backend/saved_model/*.keras
+
+# Uploads
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# Dataset images (too large for git)
+dataset/train/defective/*
+dataset/train/non_defective/*
+dataset/test/defective/*
+dataset/test/non_defective/*
+!dataset/**/.gitkeep
+
+# Jupyter
+.ipynb_checkpoints/
+notebooks/.ipynb_checkpoints/
+
+# Node / React
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temp files
+nul
+tmpclaude-*
