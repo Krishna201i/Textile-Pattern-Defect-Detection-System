@@ -2,6 +2,7 @@ import React, { useState, useRef } from "react";
 import { FiXCircle, FiCheckCircle, FiRefreshCw } from "react-icons/fi";
 import ImageUpload from "../components/ImageUpload";
 import ConfidenceGauge from "../components/ConfidenceGauge";
+import { auth } from '../firebaseClient';
 
 function DetectPage({ onResult }) {
   const [result, setResult] = useState(null);
@@ -12,6 +13,8 @@ function DetectPage({ onResult }) {
 
   const previewRef = useRef(null);
   const filenameRef = useRef("");
+
+  const canSave = Boolean(auth.currentUser);
 
   const handlePreview = (val) => {
     previewRef.current = val;
@@ -34,6 +37,20 @@ function DetectPage({ onResult }) {
       filename: filenameRef.current,
       time: new Date().toLocaleTimeString(),
     });
+  };
+
+  const handleSave = async () => {
+    if (!result) return;
+    // Prepare entry shape expected by savePrediction
+    const entry = {
+      label: result.label,
+      confidence: result.confidence,
+      defect_probability: result.defect_probability,
+      preview,
+      filename,
+      time: new Date().toLocaleTimeString(),
+    };
+    await onResult(entry);
   };
 
   const handleReset = () => {
@@ -149,6 +166,14 @@ function DetectPage({ onResult }) {
             </div>
           )}
         </div>
+      </div>
+
+      <div style={{ marginTop: 16 }}>
+        <button className="btn" onClick={handleReset}>Reset</button>
+        <button className="btn btn-primary" onClick={handleSave} disabled={!canSave} style={{ marginLeft: 8 }}>
+          Save
+        </button>
+        {!canSave && <small style={{ marginLeft: 8, color: 'var(--text-muted)' }}>Sign in to save scans</small>}
       </div>
     </div>
   );

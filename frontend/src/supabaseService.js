@@ -1,93 +1,95 @@
-import { supabase } from './supabaseClient';
+// filepath: /Users/minkuu/Documents/krishna project /Textile-Pattern-Defect-Detection-System/frontend/src/supabaseService.js
+// Firestore + Storage persistence for scan history (requires authenticated user).
 
-/**
- * Fetch all scans from Supabase, ordered oldest-first.
- * Table: "Scans" with columns: id, image_path, Confidience, defect_probability, created_at
- */
-export async function fetchHistory() {
-  const { data, error } = await supabase
-    .from('Scans')
-    .select('*')
-    .order('created_at', { ascending: true });
+import { db, storage, auth } from './firebaseClient';
 
-  if (error) {
-    console.error('Failed to fetch history:', error.message, error);
-    return [];
-  }
-
-  return (data || []).map(row => ({
-    id: row.id,
-    label: parseFloat(row.defect_probability) > 50 ? 'defective' : 'non_defective',
-    confidence: parseFloat(row.Confidience),
-    defect_probability: parseFloat(row.defect_probability),
-    preview: row.image_path,
-    filename: null,
-    time: new Date(row.created_at).toLocaleTimeString(),
-  }));
+if (!db || !storage) {
+  throw new Error('Firebase not configured. Please initialize Firebase and enable Firestore + Storage.');
 }
 
-/**
- * Insert a new scan into Supabase.
- */
+// We implement fetchHistory, savePrediction, clearAllPredictions using Firestore + Storage.
+export async function fetchHistory() {
+  const { collection, query, orderBy, where, getDocs } = await import('firebase/firestore');
+  const user = auth.currentUser;
+  if (!user) throw new Error('Not authenticated');
+
+  const col = collection(db, 'scans');
+  const q = query(col, where('owner', '==', user.uid), orderBy('created_at', 'asc'));
+  const snap = await getDocs(q);
+  const items = [];
+  snap.forEach((doc) => {
+    const data = doc.data();
+    items.push({
+      id: doc.id,
+      label: data.label || 'unknown',
+      confidence: Number(data.confidence || 0),
+      defect_probability: Number(data.defect_probability || 0),
+      preview: data.image_url || null,
+      filename: data.filename || null,
+      time: (data.created_at && data.created_at.toDate) ? data.created_at.toDate().toLocaleTimeString() : (data.time || new Date().toLocaleTimeString()),
+    });
+  });
+  return items;
+}
+
 export async function savePrediction(entry) {
-  // Compress large base64 preview images
-  let preview = entry.preview;
-  if (preview && preview.length > 500000) {
-    try {
-      const img = new Image();
-      const loaded = new Promise((resolve) => { img.onload = resolve; });
-      img.src = preview;
-      await loaded;
-      const canvas = document.createElement('canvas');
-      const maxDim = 400;
-      const scale = Math.min(maxDim / img.width, maxDim / img.height, 1);
-      canvas.width = img.width * scale;
-      canvas.height = img.height * scale;
-      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-      preview = canvas.toDataURL('image/jpeg', 0.6);
-    } catch {
-      preview = null;
-    }
-  }
+  const { collection, addDoc, serverTimestamp, doc, updateDoc } = await import('firebase/firestore');
+  const { ref: storageRef, uploadString, getDownloadURL } = await import('firebase/storage');
 
-  const { data, error } = await supabase
-    .from('Scans')
-    .insert({
-      image_path: preview || '',
-      Confidience: entry.confidence,
-      defect_probability: entry.defect_probability,
-    })
-    .select()
-    .single();
+  const user = auth.currentUser;
+  if (!user) throw new Error('Not authenticated');
 
-  if (error) {
-    console.error('Failed to save scan:', error.message, error);
-    return null;
+  const col = collection(db, 'scans');
+  // create document with owner set so rules can validate
+  const docRef = await addDoc(col, {
+    label: entry.label || 'unknown',
+    confidence: Number(entry.confidence || 0),
+    defect_probability: Number(entry.defect_probability || 0),
+    filename: entry.filename || null,
+    created_at: serverTimestamp(),
+    time: entry.time || new Date().toLocaleTimeString(),
+    image_url: '',
+    owner: user.uid,
+  });
+
+  let downloadUrl = null;
+  if (entry.preview && entry.preview.startsWith('data:')) {
+    const fileRef = storageRef(storage, `scans/${user.uid}/${docRef.id}.jpg`);
+    await uploadString(fileRef, entry.preview, 'data_url');
+    downloadUrl = await getDownloadURL(fileRef);
+    await updateDoc(doc(db, 'scans', docRef.id), { image_url: downloadUrl });
   }
 
   return {
-    id: data.id,
-    label: parseFloat(data.defect_probability) > 50 ? 'defective' : 'non_defective',
-    confidence: parseFloat(data.Confidience),
-    defect_probability: parseFloat(data.defect_probability),
-    preview: data.image_path,
-    filename: null,
-    time: new Date(data.created_at).toLocaleTimeString(),
+    id: docRef.id,
+    label: entry.label || 'unknown',
+    confidence: Number(entry.confidence || 0),
+    defect_probability: Number(entry.defect_probability || 0),
+    preview: downloadUrl || entry.preview || null,
+    filename: entry.filename || null,
+    time: entry.time || new Date().toLocaleTimeString(),
   };
 }
 
-/**
- * Delete all scans from Supabase.
- */
 export async function clearAllPredictions() {
-  const { error } = await supabase
-    .from('Scans')
-    .delete()
-    .neq('id', '00000000-0000-0000-0000-000000000000');
+  const { collection, getDocs, deleteDoc, doc, query, where } = await import('firebase/firestore');
+  const { ref: storageRef, deleteObject } = await import('firebase/storage');
+  const user = auth.currentUser;
+  if (!user) throw new Error('Not authenticated');
 
-  if (error) {
-    console.error('Failed to clear scans:', error.message);
-    return false;
-  }
+  const col = collection(db, 'scans');
+  const q = query(col, where('owner', '==', user.uid));
+  const snap = await getDocs(q);
+  const deletes = snap.docs.map(async (d) => {
+    try {
+      const data = d.data();
+      if (data && data.image_url) {
+        const fileRef = storageRef(storage, `scans/${user.uid}/${d.id}.jpg`);
+        await deleteObject(fileRef).catch(() => {});
+      }
+    } catch (e) {}
+    await deleteDoc(doc(db, 'scans', d.id));
+  });
+  await Promise.all(deletes);
   return true;
 }

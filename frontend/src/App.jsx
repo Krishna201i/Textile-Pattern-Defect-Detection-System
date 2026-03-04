@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { BrowserRouter, Routes, Route, useNavigate, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useNavigate, useLocation, Navigate } from "react-router-dom";
 import { FiHome, FiSearch, FiBarChart2, FiInfo } from "react-icons/fi";
 import Galaxy from "./components/Galaxy";
 import Dock from "./components/Dock";
@@ -7,7 +7,12 @@ import Dashboard from "./pages/Dashboard";
 import DetectPage from "./pages/DetectPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
 import AboutPage from "./pages/AboutPage";
+import LoginPage from "./pages/LoginPage";
+import SignupPage from "./pages/SignupPage";
+import AdminPage from "./pages/AdminPage";
 import { fetchHistory, savePrediction, clearAllPredictions } from "./supabaseService";
+import { onAuthChange, signOut, isAdmin } from './authService';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function AppContent({ history, addToHistory, clearHistory }) {
   const navigate = useNavigate();
@@ -69,32 +74,51 @@ function App() {
     const saved = localStorage.getItem("theme");
     return saved || "dark";
   });
+  const [user, setUser] = useState(null);
+  const [isAdminUser, setIsAdminUser] = useState(false);
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
   }, [theme]);
 
-  // Load history from Supabase on app start
+  // Listen to auth state
+  useEffect(() => {
+    const unsub = onAuthChange((u) => {
+      setUser(u);
+      if (u) {
+        isAdmin(u.uid).then((v) => setIsAdminUser(v)).catch(() => setIsAdminUser(false));
+      } else {
+        setIsAdminUser(false);
+      }
+    });
+    return unsub;
+  }, []);
+
+  // Load history from storage on app start
   useEffect(() => {
     async function loadHistory() {
-      const data = await fetchHistory();
-      setHistory(data);
+      try {
+        const data = await fetchHistory();
+        setHistory(data);
+      } catch (err) {
+        console.error('Failed to load history:', err);
+        setHistory([]);
+      }
     }
     loadHistory();
   }, []);
 
-  // Save to Supabase, then update local state
+  // Save to storage, then update local state
   const addToHistory = async (entry) => {
     const saved = await savePrediction(entry);
     if (saved) {
       setHistory((prev) => [...prev, saved]);
     } else {
-      // Fallback: add to local state so UI stays responsive
       setHistory((prev) => [...prev, entry]);
     }
   };
 
-  // Clear from Supabase, then clear local state
+  // Clear from storage, then clear local state
   const clearHistory = async () => {
     const success = await clearAllPredictions();
     if (success) {
@@ -121,11 +145,40 @@ function App() {
       </div>
 
       <div className="app-layout">
-        <AppContent
-          history={history}
-          addToHistory={addToHistory}
-          clearHistory={clearHistory}
-        />
+        {/* Simple header with sign-in state */}
+        <header className="app-header" style={{ width: '100%', maxWidth: 1200, padding: '12px 40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <h1 style={{ margin: 0, fontSize: 16 }}>TextileGuard</h1>
+            <small style={{ color: 'var(--text-muted)' }}>{user ? user.email : 'Not signed in'}</small>
+          </div>
+
+          <div>
+            {user ? (
+              <>
+                {isAdminUser && <a href="/admin" className="btn btn-sm" style={{ marginRight: 8 }}>Admin</a>}
+                <button className="btn btn-sm" onClick={() => signOut()}>Sign out</button>
+              </>
+            ) : (
+              <div style={{ display: 'flex', gap: 8 }}>
+                <a href="/login" className="btn btn-sm">Sign in</a>
+                <a href="/signup" className="btn btn-sm btn-success">Sign up</a>
+              </div>
+            )}
+          </div>
+        </header>
+
+        <Routes>
+          <Route path="/login" element={<LoginPage onLogin={(u) => setUser(u)} />} />
+          <Route path="/signup" element={<SignupPage onSignup={(u) => setUser(u)} />} />
+          <Route path="/admin" element={isAdminUser ? <AdminPage /> : <Navigate to="/" />} />
+
+          {/* Protected main app routes */}
+          <Route path="/*" element={
+            <ProtectedRoute>
+              <AppContent history={history} addToHistory={addToHistory} clearHistory={clearHistory} />
+            </ProtectedRoute>
+          } />
+        </Routes>
       </div>
     </BrowserRouter>
   );

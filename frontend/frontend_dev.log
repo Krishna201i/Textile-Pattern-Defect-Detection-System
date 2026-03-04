@@ -1,0 +1,40 @@
+
+> textile-defect-detection-frontend@1.0.0 dev
+> vite --host 127.0.0.1
+
+
+  VITE v5.4.21  ready in 150 ms
+
+  ➜  Local:   http://127.0.0.1:3000/
+10:24:08 PM [vite] .env.local changed, restarting server...
+10:24:08 PM [vite] .env.local changed, restarting server...
+10:24:08 PM [vite] server restarted.
+10:25:15 PM [vite] .env.local changed, restarting server...
+10:25:15 PM [vite] server restarted.
+10:35:43 PM [vite] hmr update /src/App.jsx
+10:35:43 PM [vite] hmr update /src/components/ErrorBoundary.jsx
+10:35:43 PM [vite] page reload src/main.jsx
+10:35:43 PM [vite] hmr update /src/components/Galaxy.jsx
+10:35:43 PM [vite] hmr update /src/styles/index.css
+10:35:43 PM [vite] .env.local changed, restarting server...
+10:35:43 PM [vite] server restarted.
+10:38:55 PM [vite] page reload index.html
+10:41:06 PM [vite] page reload index.html
+10:49:49 PM [vite] hmr update /src/App.jsx
+10:55:42 PM [vite] page reload index.html
+10:56:09 PM [vite] hmr update /src/App.jsx
+10:56:49 PM [vite] hmr update /src/styles/index.css
+11:03:13 PM [vite] hmr update /src/App.jsx
+11:03:35 PM [vite] hmr update /src/App.jsx
+11:09:57 PM [vite] hmr update /src/App.jsx
+11:15:59 PM [vite] hmr update /src/App.jsx
+11:15:59 PM [vite] hmr update /src/styles/index.css
+11:15:59 PM [vite] page reload index.html
+11:15:59 PM [vite] hmr update /src/App.jsx
+11:15:59 PM [vite] hmr update /src/App.jsx
+11:25:08 PM [vite] hmr update /src/App.jsx
+11:26:44 PM [vite] hmr update /src/App.jsx
+11:26:59 PM [vite] hmr update /src/styles/index.css
+11:28:45 PM [vite] hmr update /src/App.jsx
+11:29:09 PM [vite] hmr update /src/pages/DetectPage.jsx
+11:31:47 PM [vite] hmr update /src/App.jsx
