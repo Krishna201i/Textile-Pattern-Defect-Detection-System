@@ -1,23 +1,48 @@
 // filepath: /Users/minkuu/Documents/krishna project /Textile-Pattern-Defect-Detection-System/frontend/firebase.rules
 
-// Firestore rules: allow authenticated users to read/write their own scans
+rules_version = '2';
+
+// Firestore rules: users access own records, admins access all records.
 service cloud.firestore {
   match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdminUser() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    match /admins/{uid} {
+      // Needed so app can verify whether the current user is admin
+      allow read: if signedIn() && request.auth.uid == uid;
+      // Keep admin membership managed manually (console/backend), not by clients
+      allow write: if false;
+    }
+
     match /scans/{scanId} {
-      allow read: if request.auth != null && resource.data.owner == request.auth.uid;
-      allow create: if request.auth != null && request.resource.data.owner == request.auth.uid;
-      allow delete, update: if request.auth != null && resource.data.owner == request.auth.uid;
+      allow read: if signedIn() && (resource.data.owner == request.auth.uid || isAdminUser());
+      allow create: if signedIn() && (request.resource.data.owner == request.auth.uid || isAdminUser());
+      allow update, delete: if signedIn() && (resource.data.owner == request.auth.uid || isAdminUser());
     }
   }
 }
 
-// Storage rules: allow authenticated users to access their scan images under /scans/{uid}/{id}.jpg
+// Storage rules: users access own images, admins access all scan images.
 service firebase.storage {
   match /b/{bucket}/o {
-    match /scans/{userId}/{allPaths=**} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+    function signedIn() {
+      return request.auth != null;
     }
-    // For simple dev setups you may instead allow read for all images:
-    // match /scans/{allPaths=**} { allow read: if true; allow write: if request.auth != null; }
+
+    function isAdminUser() {
+      return signedIn()
+        && firestore.get(/databases/(default)/documents/admins/$(request.auth.uid)).data != null;
+    }
+
+    match /scans/{userId}/{allPaths=**} {
+      allow read, write: if signedIn() && (request.auth.uid == userId || isAdminUser());
+    }
   }
 }

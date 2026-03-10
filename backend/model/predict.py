@@ -39,6 +39,19 @@ def get_model():
     return _model
 
 
+def get_system_diagnostics() -> dict:
+    """Return lightweight runtime diagnostics for model and CV availability."""
+    model_exists = os.path.exists(MODEL_PATH)
+    model_loaded = _model is not None
+    return {
+        "model_path": MODEL_PATH,
+        "model_exists": model_exists,
+        "model_loaded": model_loaded,
+        "cv_available": cv2 is not None,
+        "pipeline": "cnn_cv_hybrid" if model_exists else "mock",
+    }
+
+
 def _deterministic_mock_prediction(image_path: str) -> dict:
     """Create a deterministic pseudo-prediction based on the image path.
 
@@ -127,6 +140,7 @@ def predict_image(image_path):
     processed = preprocess_single_image(image_path)
     prediction = model.predict(processed, verbose=0)
     cnn_non_defective_prob = float(prediction[0][0])
+    cnn_non_defective_prob = float(max(0.0, min(1.0, cnn_non_defective_prob)))
     cnn_defect_prob = 1.0 - cnn_non_defective_prob
 
     cv_defect_prob, cv_details = _compute_cv_defect_probability(image_path)

@@ -1,10 +1,12 @@
 import React, { useState, useRef } from "react";
 import { FiXCircle, FiCheckCircle, FiRefreshCw } from "react-icons/fi";
 import ImageUpload from "../components/ImageUpload";
+import CameraCapture from "../components/CameraCapture";
 import ConfidenceGauge from "../components/ConfidenceGauge";
 import { auth } from '../firebaseClient';
 
 function DetectPage({ onResult }) {
+  const [sourceMode, setSourceMode] = useState("upload");
   const [result, setResult] = useState(null);
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -54,32 +56,68 @@ function DetectPage({ onResult }) {
 
   const isDefective = result?.label === "defective";
 
+  const switchSourceMode = (mode) => {
+    if (mode === sourceMode) return;
+    setSourceMode(mode);
+    handleReset();
+  };
+
   return (
     <div className="fade-in">
       <div className="page-header">
         <h2>Detect Defects</h2>
-        <p>Upload a fabric image for AI-powered quality inspection</p>
+        <p>Use image upload by default, or capture from camera with quality checks</p>
       </div>
 
       <div className="content-grid">
-        {/* Left: Upload */}
+        {/* Left: Input Source */}
         <div className="card">
           <div className="card-header">
-            <h3>Upload Image</h3>
+            <h3>Image Source</h3>
             {(preview || result) && (
               <button className="btn btn-outline btn-sm" onClick={handleReset}>
                 <FiRefreshCw /> New Scan
               </button>
             )}
           </div>
-          <ImageUpload
-            setResult={handleResult}
-            setPreview={handlePreview}
-            setLoading={setLoading}
-            setError={setError}
-            setFilename={handleFilename}
-            loading={loading}
-          />
+
+          <div className="detect-source-switch">
+            <button
+              type="button"
+              className={`btn btn-sm ${sourceMode === "upload" ? "btn-primary" : "btn-outline"}`}
+              onClick={() => switchSourceMode("upload")}
+            >
+              Upload Image
+            </button>
+            <button
+              type="button"
+              className={`btn btn-sm ${sourceMode === "camera" ? "btn-primary" : "btn-outline"}`}
+              onClick={() => switchSourceMode("camera")}
+            >
+              Camera Capture
+            </button>
+          </div>
+
+          {sourceMode === "upload" ? (
+            <ImageUpload
+              setResult={handleResult}
+              setPreview={handlePreview}
+              setLoading={setLoading}
+              setError={setError}
+              setFilename={handleFilename}
+              loading={loading}
+            />
+          ) : (
+            <CameraCapture
+              setResult={handleResult}
+              setPreview={handlePreview}
+              setLoading={setLoading}
+              setError={setError}
+              setFilename={handleFilename}
+              loading={loading}
+            />
+          )}
+
           {preview && (
             <div className="preview-section">
               <img src={preview} alt="Preview" />

@@ -7,7 +7,7 @@ import os
 import numpy as np
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
-# Image dimensions expected by MobileNetV2
+# Image dimensions expected by the CNN model
 IMG_HEIGHT = 224
 IMG_WIDTH = 224
 BATCH_SIZE = 32
