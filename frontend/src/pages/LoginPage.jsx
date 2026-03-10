@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { signIn, sendPasswordReset } from '../authService';
+import { signIn, sendPasswordReset, isAdmin } from '../authService';
 
 export default function LoginPage({ onLogin }) {
   const [email, setEmail] = useState('');
@@ -21,7 +21,8 @@ export default function LoginPage({ onLogin }) {
     try {
       const user = await signIn(email, password);
       if (onLogin) onLogin(user);
-      navigate('/');
+      const admin = await isAdmin(user.uid);
+      navigate(admin ? '/admin' : '/');
     } catch (err) {
       setError(err?.message || 'Login failed');
     } finally {
@@ -64,7 +65,7 @@ export default function LoginPage({ onLogin }) {
               <label>Email</label>
               <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="you@example.com" />
 
-              <label style={{ marginTop: 10 }}>Password</label>
+              <label className="auth-label-spaced">Password</label>
               <div className="password-field-wrap">
                 <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} required placeholder="Password" />
                 <button type="button" className="btn btn-sm btn-outline password-toggle" onClick={() => setShowPassword(s => !s)}>{showPassword ? 'Hide' : 'Show'}</button>

@@ -91,7 +91,7 @@ function DetectPage({ onResult }) {
         {/* Right: Results */}
         <div>
           {loading && (
-            <div className="card" style={{ textAlign: "center" }}>
+            <div className="card centered-card">
               <div className="spinner" />
               <p className="loading-text">Analyzing fabric...</p>
             </div>
@@ -159,12 +159,12 @@ function DetectPage({ onResult }) {
         </div>
       </div>
 
-      <div style={{ marginTop: 16 }}>
+      <div className="detect-actions">
         <button className="btn" onClick={handleReset}>Reset</button>
-        <button className="btn btn-primary" onClick={handleSave} disabled={!canSave} style={{ marginLeft: 8 }}>
+        <button className="btn btn-primary" onClick={handleSave} disabled={!canSave}>
           Save
         </button>
-        {!canSave && <small style={{ marginLeft: 8, color: 'var(--text-muted)' }}>Sign in to save scans</small>}
+        {!canSave && <small className="detect-save-note">Sign in to save scans</small>}
       </div>
     </div>
   );

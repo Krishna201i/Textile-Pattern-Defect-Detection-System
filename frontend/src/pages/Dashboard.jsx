@@ -27,20 +27,20 @@ function Dashboard({ history }) {
     <div className="fade-in dashboard-page">
       <div className="dashboard-content">
         <div className="page-header" style={{ textAlign: "center", marginBottom: "32px" }}>
-          <h1 className="gradient-title">TextileGuard</h1>
-          <p className="gradient-subtitle">AI-Powered Fabric Defect Detection System</p>
+          <h2 className="portal-title">Operations Dashboard</h2>
+          <p className="portal-subtitle">Monitor fabric quality, review scan outcomes, and act quickly.</p>
         </div>
 
         <MagicBento
-          enableStars
-          enableSpotlight
+          enableStars={false}
+          enableSpotlight={false}
           enableBorderGlow={true}
-          enableTilt
-          enableMagnetism
-          clickEffect
-          spotlightRadius={510}
-          particleCount={12}
-          glowColor="132, 0, 255"
+          enableTilt={false}
+          enableMagnetism={false}
+          clickEffect={false}
+          spotlightRadius={420}
+          particleCount={0}
+          glowColor="59, 130, 246"
           disableAnimations={false}
         >
           {/* Stat 1: Total Scanned */}

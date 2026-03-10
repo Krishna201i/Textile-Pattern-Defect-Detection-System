@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { BrowserRouter, Routes, Route, useNavigate, useLocation, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useNavigate, useLocation, Navigate, Link } from "react-router-dom";
 import { FiHome, FiSearch, FiBarChart2, FiInfo } from "react-icons/fi";
 import Dock from "./components/Dock";
 import GradientText from "./components/GradientText";
@@ -76,6 +76,8 @@ function App() {
   });
   const [user, setUser] = useState(null);
   const [isAdminUser, setIsAdminUser] = useState(false);
+  const [authReady, setAuthReady] = useState(false);
+  const [adminCheckReady, setAdminCheckReady] = useState(false);
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
@@ -86,10 +88,16 @@ function App() {
     const unsub = onAuthChange((u) => {
       setUser(u);
       if (u) {
-        isAdmin(u.uid).then((v) => setIsAdminUser(v)).catch(() => setIsAdminUser(false));
+        setAdminCheckReady(false);
+        isAdmin(u.uid)
+          .then((v) => setIsAdminUser(v))
+          .catch(() => setIsAdminUser(false))
+          .finally(() => setAdminCheckReady(true));
       } else {
         setIsAdminUser(false);
+        setAdminCheckReady(true);
       }
+      setAuthReady(true);
     });
     return unsub;
   }, []);
@@ -162,13 +170,12 @@ function App() {
           <div>
             {user ? (
               <>
-                {isAdminUser && <a href="/admin" className="btn btn-sm" style={{ marginRight: 8 }}>Admin</a>}
                 <button className="btn btn-sm" onClick={() => signOut()}>Sign out</button>
               </>
             ) : (
               <div style={{ display: 'flex', gap: 8 }}>
-                <a href="/login" className="btn btn-sm">Sign in</a>
-                <a href="/signup" className="btn btn-sm btn-success">Sign up</a>
+                <Link to="/login" className="btn btn-sm">Sign in</Link>
+                <Link to="/signup" className="btn btn-sm btn-success">Sign up</Link>
               </div>
             )}
           </div>
@@ -177,11 +184,23 @@ function App() {
         <Routes>
           <Route path="/login" element={<LoginPage onLogin={(u) => setUser(u)} />} />
           <Route path="/signup" element={<SignupPage onSignup={(u) => setUser(u)} />} />
-          <Route path="/admin" element={isAdminUser ? <AdminPage /> : <Navigate to="/" />} />
+          <Route
+            path="/admin"
+            element={
+              !authReady || !adminCheckReady
+                ? (
+                  <div className="card" style={{ marginTop: 24, textAlign: 'center' }}>
+                    <div className="spinner" />
+                    <p className="loading-text">Checking admin access...</p>
+                  </div>
+                )
+                : (isAdminUser ? <AdminPage /> : <Navigate to="/" />)
+            }
+          />
 
           {/* Protected main app routes */}
           <Route path="/*" element={
-            <ProtectedRoute>
+            <ProtectedRoute user={user} authReady={authReady}>
               <AppContent history={history} addToHistory={addToHistory} clearHistory={clearHistory} />
             </ProtectedRoute>
           } />

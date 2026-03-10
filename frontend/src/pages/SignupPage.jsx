@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { signUp } from '../authService';
-import GradientText from '../components/GradientText';
 
 export default function SignupPage({ onSignup }) {
   const [email, setEmail] = useState('');
@@ -30,37 +29,47 @@ export default function SignupPage({ onSignup }) {
   };
 
   return (
-    <div className="auth-page">
-      <div className="auth-card">
-        <GradientText
-          className="auth-gradient-title"
-          colors={['#7aa2ff', '#bcd3ff', '#d9e5ff']}
-          animationSpeed={10}
-          direction="horizontal"
-        >
-          <h2 style={{ marginBottom: 8 }}>Create account</h2>
-        </GradientText>
-        <p style={{ color: 'var(--text-muted)', marginBottom: 12 }}>Create an account to save scans and access analytics</p>
-
-        <form onSubmit={handleSubmit}>
-          <label>Email</label>
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="you@example.com" />
-
-          <label style={{ marginTop: 10 }}>Password</label>
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required placeholder="Choose a strong password" />
-
-          <label style={{ marginTop: 10 }}>Confirm password</label>
-          <input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} required placeholder="Confirm password" />
-
-          <div style={{ marginTop: 14 }}>
-            <button type="submit" className="btn btn-primary" disabled={loading}>{loading ? 'Creating...' : 'Create account'}</button>
+    <div className="auth-page modern auth-page-pro">
+      <div className="auth-card modern-card auth-card-pro">
+        <div className="auth-split">
+          <div className="auth-side auth-side-illustration auth-side-pro">
+            <div className="brand auth-brand-pro">
+              <p className="auth-eyebrow">Enterprise Quality Platform</p>
+              <h3 className="auth-brand-title">Create your workspace</h3>
+              <p>Set up your secure account to manage scans and analytics.</p>
+            </div>
+            <ul className="auth-side-points">
+              <li>Save and organize scan history</li>
+              <li>Track quality performance over time</li>
+              <li>Access role-based admin capabilities</li>
+            </ul>
           </div>
 
-          {error && <div className="error" style={{ marginTop: 12 }}>{error}</div>}
-        </form>
+          <div className="auth-side auth-side-form">
+            <h2>Create account</h2>
+            <p className="muted">Create an account to save scans and access analytics.</p>
 
-        <div style={{ marginTop: 12, fontSize: 13 }}>
-          Already have an account? <Link to="/login" style={{ color: 'var(--accent)' }}>Sign in</Link>
+            <form onSubmit={handleSubmit}>
+              <label>Email</label>
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="you@example.com" />
+
+              <label className="auth-label-spaced">Password</label>
+              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required placeholder="Choose a strong password" />
+
+              <label className="auth-label-spaced">Confirm password</label>
+              <input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} required placeholder="Confirm password" />
+
+              <div className="auth-submit-row">
+                <button type="submit" className="btn btn-primary" disabled={loading}>{loading ? 'Creating...' : 'Create account'}</button>
+              </div>
+
+              {error && <div className="error auth-message">{error}</div>}
+            </form>
+
+            <div className="auth-footer-text">
+              Already have an account? <Link to="/login">Sign in</Link>
+            </div>
+          </div>
         </div>
       </div>
     </div>
