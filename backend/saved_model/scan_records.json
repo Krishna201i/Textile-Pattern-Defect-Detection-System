@@ -36,5 +36,44 @@
     "inference_ms": 125.64,
     "admin_note": "",
     "request_id": "bd061f44-ec96-4410-a995-943c7d8cef80"
+  },
+  {
+    "id": "f1d9880e-6f3e-4baa-a536-d11646b3dbb0",
+    "owner": "local",
+    "filename": "threshold_check_image.png",
+    "label": "defective",
+    "confidence": 75.25,
+    "defect_probability": 75.25,
+    "pipeline": "cnn_cv_hybrid",
+    "time": "2026-03-10T21:00:59.405282",
+    "inference_ms": 110.77,
+    "admin_note": "",
+    "request_id": "b0368d83-d816-43b5-8874-e2ecfc7f9e39"
+  },
+  {
+    "id": "80cf0686-df39-4e9e-8ffb-e856f5d80bc5",
+    "owner": "local",
+    "filename": "threshold_verify.png",
+    "label": "defective",
+    "confidence": 75.25,
+    "defect_probability": 75.25,
+    "pipeline": "cnn_cv_hybrid",
+    "time": "2026-03-10T21:07:02.102356",
+    "inference_ms": 70.85,
+    "admin_note": "",
+    "request_id": "41e6060c-4320-42af-ab0c-dc1975c7ebd4"
+  },
+  {
+    "id": "5fd6ea75-3b44-4681-a797-5f5cf51d59c0",
+    "owner": "local",
+    "filename": "threshold_verify2.png",
+    "label": "defective",
+    "confidence": 75.25,
+    "defect_probability": 75.25,
+    "pipeline": "cnn_cv_hybrid",
+    "time": "2026-03-10T21:08:35.623168",
+    "inference_ms": 69.89,
+    "admin_note": "",
+    "request_id": "2db1be42-6b73-442c-8b6c-5e195391f487"
   }
 ]

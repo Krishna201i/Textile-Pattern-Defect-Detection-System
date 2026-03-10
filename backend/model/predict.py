@@ -16,11 +16,16 @@ except Exception:
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MODEL_PATH = os.path.join(BASE_DIR, "saved_model", "textile_defect_model.keras")
+DEFECT_THRESHOLD = float(os.environ.get("DEFECT_THRESHOLD", "0.60"))
 
 # Class labels matching the directory names (alphabetical order)
 CLASS_LABELS = {0: "defective", 1: "non_defective"}
 
 _model = None
+
+
+def _normalized_defect_threshold() -> float:
+    return float(max(0.01, min(0.99, DEFECT_THRESHOLD)))
 
 
 def get_model():
@@ -49,6 +54,7 @@ def get_system_diagnostics() -> dict:
         "model_loaded": model_loaded,
         "cv_available": cv2 is not None,
         "pipeline": "cnn_cv_hybrid" if model_exists else "mock",
+        "defect_threshold": round(_normalized_defect_threshold(), 4),
     }
 
 
@@ -66,8 +72,10 @@ def _deterministic_mock_prediction(image_path: str) -> dict:
     probability = float(v) / float(0xFFFFFFFF)
 
     # Interpret probability: close to 0 => defective, close to 1 => non_defective
-    label = CLASS_LABELS[1] if probability >= 0.5 else CLASS_LABELS[0]
-    confidence = probability if probability >= 0.5 else 1.0 - probability
+    defect_prob = 1.0 - probability
+    threshold = _normalized_defect_threshold()
+    label = CLASS_LABELS[0] if defect_prob >= threshold else CLASS_LABELS[1]
+    confidence = defect_prob if label == CLASS_LABELS[0] else probability
 
     return {
         "model_available": False,
@@ -75,7 +83,8 @@ def _deterministic_mock_prediction(image_path: str) -> dict:
         "pipeline": "mock",
         "label": label,
         "confidence": round(confidence * 100, 2),
-        "defect_probability": round((1.0 - probability) * 100, 2),
+        "defect_probability": round(defect_prob * 100, 2),
+        "defect_threshold": round(threshold * 100, 2),
         "note": "deterministic mock prediction (no trained model present)",
     }
 
@@ -149,8 +158,9 @@ def predict_image(image_path):
     hybrid_defect_prob = float(max(0.0, min(1.0, hybrid_defect_prob)))
 
     non_defective_prob = 1.0 - hybrid_defect_prob
-    label = CLASS_LABELS[1] if non_defective_prob >= 0.5 else CLASS_LABELS[0]
-    confidence = non_defective_prob if non_defective_prob >= 0.5 else hybrid_defect_prob
+    threshold = _normalized_defect_threshold()
+    label = CLASS_LABELS[0] if hybrid_defect_prob >= threshold else CLASS_LABELS[1]
+    confidence = hybrid_defect_prob if label == CLASS_LABELS[0] else non_defective_prob
 
     return {
         "model_available": True,
@@ -158,6 +168,7 @@ def predict_image(image_path):
         "label": label,
         "confidence": round(confidence * 100, 2),
         "defect_probability": round(hybrid_defect_prob * 100, 2),
+        "defect_threshold": round(threshold * 100, 2),
         "cnn_defect_probability": round(cnn_defect_prob * 100, 2),
         "cv_defect_probability": round(cv_defect_prob * 100, 2),
         "cv_details": cv_details,

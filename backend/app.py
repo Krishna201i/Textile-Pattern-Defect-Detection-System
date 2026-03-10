@@ -44,6 +44,7 @@ _RATE_LOCK = threading.Lock()
 
 VALID_LABELS = {"defective", "non_defective"}
 MAX_NOTE_LEN = int(os.environ.get("ADMIN_NOTE_MAX_LEN", "500"))
+DEFECT_THRESHOLD_PERCENT = float(os.environ.get("DEFECT_THRESHOLD_PERCENT", "60"))
 
 
 def _json_error(message: str, status_code: int, *, code: str | None = None):
@@ -131,6 +132,10 @@ def _validate_image_file(filepath: str) -> None:
 def _clamp_percent(value, default=0.0):
     value = _to_float(value, default)
     return float(max(0.0, min(100.0, value)))
+
+
+def _normalized_threshold_percent() -> float:
+    return float(max(1.0, min(99.0, DEFECT_THRESHOLD_PERCENT)))
 
 
 @app.before_request
@@ -231,6 +236,19 @@ def predict():
     try:
         _validate_image_file(filepath)
         result = predict_image(filepath)
+        defect_prob = _clamp_percent(result.get("defect_probability", 0.0))
+        threshold_percent = _normalized_threshold_percent()
+
+        if defect_prob >= threshold_percent:
+            result["label"] = "defective"
+            result["confidence"] = defect_prob
+        else:
+            result["label"] = "non_defective"
+            result["confidence"] = round(100.0 - defect_prob, 2)
+
+        result["defect_probability"] = defect_prob
+        result["defect_threshold"] = threshold_percent
+
         inference_ms = round((time.perf_counter() - started_at) * 1000.0, 2)
 
         records = _load_records()
