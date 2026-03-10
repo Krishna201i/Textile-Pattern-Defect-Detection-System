@@ -1014,6 +1014,34 @@ body {
   letter-spacing: 0.5px;
 }
 
+.analytics-insight-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.analytics-insight-item {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--bg-input);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.analytics-insight-item .label {
+  color: var(--text-muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.analytics-insight-item strong {
+  color: var(--text-primary);
+  font-size: 16px;
+}
+
 /* ===== About page workflow ===== */
 .workflow-steps {
   display: flex;
@@ -1134,6 +1162,9 @@ body {
   .summary-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+  .analytics-insight-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media (max-width: 768px) {
@@ -1166,6 +1197,10 @@ body {
   }
 
   .content-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .analytics-insight-row {
     grid-template-columns: 1fr;
   }
 

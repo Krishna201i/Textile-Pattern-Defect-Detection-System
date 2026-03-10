@@ -2,54 +2,83 @@ import React from "react";
 import { FiDownload, FiTrendingUp } from "react-icons/fi";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, BarChart, Bar,
+  PieChart, Pie, Cell, BarChart, Bar, AreaChart, Area,
 } from "recharts";
 
 function AnalyticsPage({ history, onClearHistory }) {
-  const total = history.length;
-  const defects = history.filter((h) => h.label === "defective").length;
-  const passed = total - defects;
-
-  const confidences = history.map((h) => h.confidence);
-  const avgConf = total > 0 ? (confidences.reduce((a, b) => a + b, 0) / total).toFixed(1) : "0.0";
-  const maxConf = total > 0 ? Math.max(...confidences).toFixed(1) : "0.0";
-  const minConf = total > 0 ? Math.min(...confidences).toFixed(1) : "0.0";
-
-  // Confidence trend data
-  const trendData = history.map((h, i) => ({
-    scan: i + 1,
-    confidence: h.confidence,
-    defect: h.defect_probability,
+  const normalizedHistory = history.map((item, index) => ({
+    ...item,
+    index: index + 1,
+    confidence: Number(item.confidence || 0),
+    defect_probability: Number(item.defect_probability || 0),
+    label: item.label || "unknown",
+    source: item.source || "upload",
+    pipeline: item.pipeline || "cnn_cv_hybrid",
   }));
 
-  // Pie data
+  const total = normalizedHistory.length;
+  const defects = normalizedHistory.filter((h) => h.label === "defective").length;
+  const passed = total - defects;
+  const defectRate = total > 0 ? ((defects / total) * 100).toFixed(1) : "0.0";
+
+  const confidences = normalizedHistory.map((h) => h.confidence);
+  const defectScores = normalizedHistory.map((h) => h.defect_probability);
+  const avgConf = total > 0 ? (confidences.reduce((a, b) => a + b, 0) / total).toFixed(1) : "0.0";
+  const avgDefect = total > 0 ? (defectScores.reduce((a, b) => a + b, 0) / total).toFixed(1) : "0.0";
+
+  const highRiskCount = normalizedHistory.filter((h) => h.defect_probability >= 70).length;
+  const uncertainCount = normalizedHistory.filter((h) => h.defect_probability >= 40 && h.defect_probability <= 60).length;
+  const falseAlarmCandidates = normalizedHistory.filter((h) => h.label === "defective" && h.defect_probability < 50).length;
+
+  const trendWindow = normalizedHistory.slice(-20);
+  const trendData = trendWindow.map((h, i) => ({
+    scan: i + 1,
+    confidence: h.confidence,
+    defect_probability: h.defect_probability,
+  }));
+
   const pieData = total > 0
     ? [{ name: "Defective", value: defects }, { name: "Passed", value: passed }]
     : [{ name: "No Data", value: 1 }];
-  const PIE_COLORS = total > 0 ? ["#ef4444", "#22c55e"] : ["#334155"];
+  const PIE_COLORS = total > 0 ? ["var(--danger)", "var(--success)"] : ["var(--text-muted)"];
 
-  // Histogram: defect probability buckets
-  const buckets = [
-    { range: "0-20%", count: 0 },
-    { range: "20-40%", count: 0 },
-    { range: "40-60%", count: 0 },
-    { range: "60-80%", count: 0 },
-    { range: "80-100%", count: 0 },
+  const sourceCounts = normalizedHistory.reduce(
+    (acc, item) => {
+      if (item.source === "camera") acc.camera += 1;
+      else acc.upload += 1;
+      return acc;
+    },
+    { upload: 0, camera: 0 }
+  );
+
+  const sourceData = [
+    { source: "Upload", count: sourceCounts.upload },
+    { source: "Camera", count: sourceCounts.camera },
   ];
-  history.forEach((h) => {
-    const p = h.defect_probability;
-    if (p < 20) buckets[0].count++;
-    else if (p < 40) buckets[1].count++;
-    else if (p < 60) buckets[2].count++;
-    else if (p < 80) buckets[3].count++;
-    else buckets[4].count++;
+
+  const confidenceBands = [
+    { range: "0-50", count: 0 },
+    { range: "50-70", count: 0 },
+    { range: "70-85", count: 0 },
+    { range: "85-100", count: 0 },
+  ];
+
+  normalizedHistory.forEach((item) => {
+    const c = item.confidence;
+    if (c < 50) confidenceBands[0].count += 1;
+    else if (c < 70) confidenceBands[1].count += 1;
+    else if (c < 85) confidenceBands[2].count += 1;
+    else confidenceBands[3].count += 1;
   });
 
   const exportCSV = () => {
-    if (history.length === 0) return;
-    const header = "Filename,Label,Confidence,Defect Probability,Time\n";
-    const rows = history
-      .map((h) => `${h.filename || "image"},${h.label},${h.confidence},${h.defect_probability},${h.time}`)
+    if (normalizedHistory.length === 0) return;
+    const header = "Filename,Label,Confidence,Defect Probability,Source,Pipeline,CNN Defect Probability,CV Defect Probability,Time\n";
+    const rows = normalizedHistory
+      .map(
+        (h) =>
+          `${h.filename || "image"},${h.label},${h.confidence},${h.defect_probability},${h.source || "upload"},${h.pipeline || "cnn_cv_hybrid"},${h.cnn_defect_probability ?? ""},${h.cv_defect_probability ?? ""},${h.time}`
+      )
       .join("\n");
     const blob = new Blob([header + rows], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
@@ -65,7 +94,7 @@ function AnalyticsPage({ history, onClearHistory }) {
       <div className="page-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
         <div>
           <h2>Analytics</h2>
-          <p>Session statistics and data visualization</p>
+          <p>Textile defect session analysis and quality insights</p>
         </div>
         <div style={{ display: "flex", gap: "8px" }}>
           <button className="btn btn-outline btn-sm" onClick={exportCSV} disabled={total === 0}>
@@ -86,16 +115,32 @@ function AnalyticsPage({ history, onClearHistory }) {
           <div className="label">Total Scans</div>
         </div>
         <div className="summary-item">
+          <div className="value">{defectRate}%</div>
+          <div className="label">Defect Rate</div>
+        </div>
+        <div className="summary-item">
+          <div className="value">{highRiskCount}</div>
+          <div className="label">High Risk (≥70%)</div>
+        </div>
+        <div className="summary-item">
+          <div className="value">{uncertainCount}</div>
+          <div className="label">Uncertain (40-60%)</div>
+        </div>
+        <div className="summary-item">
           <div className="value">{avgConf}%</div>
           <div className="label">Avg Confidence</div>
         </div>
         <div className="summary-item">
-          <div className="value">{maxConf}%</div>
-          <div className="label">Best Confidence</div>
+          <div className="value">{avgDefect}%</div>
+          <div className="label">Avg Defect Probability</div>
         </div>
         <div className="summary-item">
-          <div className="value">{minConf}%</div>
-          <div className="label">Lowest Confidence</div>
+          <div className="value">{sourceCounts.upload}</div>
+          <div className="label">Upload Source</div>
+        </div>
+        <div className="summary-item">
+          <div className="value">{sourceCounts.camera}</div>
+          <div className="label">Camera Source</div>
         </div>
       </div>
 
@@ -113,16 +158,16 @@ function AnalyticsPage({ history, onClearHistory }) {
           <div className="charts-grid">
             {/* Confidence Trend */}
             <div className="chart-card">
-              <h3>Confidence Trend</h3>
+              <h3>Recent Trend (Last 20 scans)</h3>
               <ResponsiveContainer width="100%" height={250}>
-                <LineChart data={trendData}>
+                <AreaChart data={trendData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="scan" label={{ value: "Scan #", position: "insideBottom", offset: -5 }} />
                   <YAxis domain={[0, 100]} />
                   <Tooltip />
-                  <Line type="monotone" dataKey="confidence" stroke="#3b82f6" strokeWidth={2} dot={{ r: 3 }} />
-                  <Line type="monotone" dataKey="defect" stroke="#ef4444" strokeWidth={2} dot={{ r: 3 }} strokeDasharray="5 5" />
-                </LineChart>
+                  <Area type="monotone" dataKey="defect_probability" stroke="var(--danger)" fill="var(--danger-light)" strokeWidth={2} />
+                  <Line type="monotone" dataKey="confidence" stroke="var(--accent)" strokeWidth={2} dot={false} />
+                </AreaChart>
               </ResponsiveContainer>
             </div>
 
@@ -142,18 +187,50 @@ function AnalyticsPage({ history, onClearHistory }) {
             </div>
           </div>
 
-          {/* Histogram */}
-          <div className="chart-card" style={{ marginBottom: "24px" }}>
-            <h3>Defect Probability Distribution</h3>
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={buckets}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="range" />
-                <YAxis allowDecimals={false} />
-                <Tooltip />
-                <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+          <div className="charts-grid">
+            <div className="chart-card">
+              <h3>Source Usage</h3>
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={sourceData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="source" />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip />
+                  <Bar dataKey="count" fill="var(--purple)" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="chart-card">
+              <h3>Confidence Quality Bands</h3>
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={confidenceBands}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="range" />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip />
+                  <Bar dataKey="count" fill="var(--accent)" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          <div className="card analytics-insight-row" style={{ marginBottom: "24px" }}>
+            <div className="analytics-insight-item">
+              <span className="label">Defective scans</span>
+              <strong>{defects}</strong>
+            </div>
+            <div className="analytics-insight-item">
+              <span className="label">Passed scans</span>
+              <strong>{passed}</strong>
+            </div>
+            <div className="analytics-insight-item">
+              <span className="label">False alarm candidates</span>
+              <strong>{falseAlarmCandidates}</strong>
+            </div>
+            <div className="analytics-insight-item">
+              <span className="label">Primary pipeline</span>
+              <strong>{normalizedHistory[normalizedHistory.length - 1]?.pipeline || "n/a"}</strong>
+            </div>
           </div>
 
           {/* Full History Table */}
@@ -171,11 +248,13 @@ function AnalyticsPage({ history, onClearHistory }) {
                     <th>Result</th>
                     <th>Confidence</th>
                     <th>Defect Prob.</th>
+                    <th>Source</th>
+                    <th>Pipeline</th>
                     <th>Time</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {[...history].reverse().map((item, i) => (
+                  {[...normalizedHistory].reverse().map((item, i) => (
                     <tr key={i}>
                       <td>{total - i}</td>
                       <td>
@@ -195,6 +274,8 @@ function AnalyticsPage({ history, onClearHistory }) {
                       </td>
                       <td>{item.confidence}%</td>
                       <td>{item.defect_probability}%</td>
+                      <td>{item.source || "upload"}</td>
+                      <td>{item.pipeline || "cnn_cv_hybrid"}</td>
                       <td style={{ fontSize: "12px", color: "var(--text-muted)" }}>{item.time}</td>
                     </tr>
                   ))}
