@@ -28,15 +28,6 @@ function DetectPage({ onResult }) {
 
   const handleResult = (prediction) => {
     setResult(prediction);
-    if (!prediction) return;
-    onResult({
-      label: prediction.label,
-      confidence: prediction.confidence,
-      defect_probability: prediction.defect_probability,
-      preview: previewRef.current,
-      filename: filenameRef.current,
-      time: new Date().toLocaleTimeString(),
-    });
   };
 
   const handleSave = async () => {

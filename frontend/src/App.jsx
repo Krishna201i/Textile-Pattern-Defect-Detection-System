@@ -10,7 +10,7 @@ import AboutPage from "./pages/AboutPage";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import AdminPage from "./pages/AdminPage";
-import { fetchHistory, savePrediction, clearAllPredictions } from "./supabaseService";
+import { fetchHistory, savePrediction, clearAllPredictions } from "./firebaseService";
 import { onAuthChange, signOut, isAdmin } from './authService';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -115,19 +115,28 @@ function App() {
 
   // Save to storage, then update local state
   const addToHistory = async (entry) => {
-    const saved = await savePrediction(entry);
-    if (saved) {
-      setHistory((prev) => [...prev, saved]);
-    } else {
+    try {
+      const saved = await savePrediction(entry);
+      if (saved) {
+        setHistory((prev) => [...prev, saved]);
+      } else {
+        setHistory((prev) => [...prev, entry]);
+      }
+    } catch (err) {
+      console.error('Failed to save history entry:', err);
       setHistory((prev) => [...prev, entry]);
     }
   };
 
   // Clear from storage, then clear local state
   const clearHistory = async () => {
-    const success = await clearAllPredictions();
-    if (success) {
-      setHistory([]);
+    try {
+      const success = await clearAllPredictions();
+      if (success) {
+        setHistory([]);
+      }
+    } catch (err) {
+      console.error('Failed to clear history:', err);
     }
   };
 

@@ -1,17 +1,15 @@
-// filepath: /Users/minkuu/Documents/krishna project /Textile-Pattern-Defect-Detection-System/frontend/src/supabaseService.js
 // Firestore + Storage persistence for scan history (requires authenticated user).
 
 import { db, storage, auth } from './firebaseClient';
 
-if (!db || !storage) {
-  throw new Error('Firebase not configured. Please initialize Firebase and enable Firestore + Storage.');
-}
+const isFirebaseConfigured = Boolean(db && storage && auth);
 
-// We implement fetchHistory, savePrediction, clearAllPredictions using Firestore + Storage.
 export async function fetchHistory() {
+  if (!isFirebaseConfigured) return [];
+
   const { collection, query, orderBy, where, getDocs } = await import('firebase/firestore');
   const user = auth.currentUser;
-  if (!user) throw new Error('Not authenticated');
+  if (!user) return [];
 
   const col = collection(db, 'scans');
   const q = query(col, where('owner', '==', user.uid), orderBy('created_at', 'asc'));
@@ -33,14 +31,15 @@ export async function fetchHistory() {
 }
 
 export async function savePrediction(entry) {
+  if (!isFirebaseConfigured) return null;
+
   const { collection, addDoc, serverTimestamp, doc, updateDoc } = await import('firebase/firestore');
   const { ref: storageRef, uploadString, getDownloadURL } = await import('firebase/storage');
 
   const user = auth.currentUser;
-  if (!user) throw new Error('Not authenticated');
+  if (!user) return null;
 
   const col = collection(db, 'scans');
-  // create document with owner set so rules can validate
   const docRef = await addDoc(col, {
     label: entry.label || 'unknown',
     confidence: Number(entry.confidence || 0),
@@ -72,10 +71,12 @@ export async function savePrediction(entry) {
 }
 
 export async function clearAllPredictions() {
+  if (!isFirebaseConfigured) return false;
+
   const { collection, getDocs, deleteDoc, doc, query, where } = await import('firebase/firestore');
   const { ref: storageRef, deleteObject } = await import('firebase/storage');
   const user = auth.currentUser;
-  if (!user) throw new Error('Not authenticated');
+  if (!user) return false;
 
   const col = collection(db, 'scans');
   const q = query(col, where('owner', '==', user.uid));
