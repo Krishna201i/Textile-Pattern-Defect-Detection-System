@@ -66,7 +66,7 @@ body {
 }
 
 /* ===== App Layout ===== */
-.galaxy-bg {
+.professional-bg {
   position: fixed;
   top: 0;
   left: 0;
@@ -74,12 +74,10 @@ body {
   bottom: 0;
   z-index: 0;
   pointer-events: none;
-}
-
-.galaxy-bg canvas {
-  display: block;
-  width: 100% !important;
-  height: 100% !important;
+  background:
+    radial-gradient(1200px 600px at 12% -8%, rgba(59, 130, 246, 0.18), transparent 62%),
+    radial-gradient(900px 520px at 88% 108%, rgba(15, 23, 42, 0.35), transparent 60%),
+    linear-gradient(180deg, #0b1220 0%, #0f172a 45%, #111827 100%);
 }
 
 .app-layout {
@@ -1206,3 +1204,91 @@ body {
 
 .auth-card .error { color: var(--danger); }
 .auth-card .info { color: var(--success); }
+
+.auth-page-pro {
+  padding-top: 40px;
+}
+
+.auth-card-pro {
+  background: rgba(10, 16, 30, 0.72);
+}
+
+.auth-side-pro {
+  background: linear-gradient(165deg, rgba(15, 23, 42, 0.92), rgba(30, 41, 59, 0.78));
+}
+
+.auth-brand-pro h3 {
+  font-size: 28px;
+  letter-spacing: 0.3px;
+}
+
+.auth-eyebrow {
+  margin: 0 0 10px 0;
+  font-size: 11px;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: rgba(148, 163, 184, 0.9);
+}
+
+.auth-side-points {
+  margin: 24px 0 0 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 8px;
+  color: rgba(226, 232, 240, 0.92);
+  font-size: 14px;
+}
+
+.password-field-wrap {
+  position: relative;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 8px;
+  top: 8px;
+}
+
+.auth-form-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+}
+
+.remember-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.auth-submit-row {
+  margin-top: 18px;
+}
+
+.auth-message {
+  margin-top: 12px;
+}
+
+.auth-footer-text {
+  margin-top: 14px;
+  color: var(--text-secondary);
+}
+
+@media (max-width: 900px) {
+  .auth-card.modern-card {
+    width: 100%;
+  }
+
+  .auth-split {
+    flex-direction: column;
+  }
+
+  .auth-side-illustration {
+    width: 100%;
+  }
+
+  .auth-side-form {
+    width: 100%;
+  }
+}

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, useNavigate, useLocation, Navigate } from "react-router-dom";
 import { FiHome, FiSearch, FiBarChart2, FiInfo } from "react-icons/fi";
-import Galaxy from "./components/Galaxy";
 import Dock from "./components/Dock";
 import Dashboard from "./pages/Dashboard";
 import DetectPage from "./pages/DetectPage";
@@ -94,9 +93,14 @@ function App() {
     return unsub;
   }, []);
 
-  // Load history from storage on app start
+  // Load history only when authenticated user is available
   useEffect(() => {
     async function loadHistory() {
+      if (!user) {
+        setHistory([]);
+        return;
+      }
+
       try {
         const data = await fetchHistory();
         setHistory(data);
@@ -106,7 +110,7 @@ function App() {
       }
     }
     loadHistory();
-  }, []);
+  }, [user]);
 
   // Save to storage, then update local state
   const addToHistory = async (entry) => {
@@ -128,21 +132,7 @@ function App() {
 
   return (
     <BrowserRouter>
-      {/* Galaxy background — covers entire viewport */}
-      <div className="galaxy-bg">
-        <Galaxy
-          hueShift={270}
-          speed={0.6}
-          density={1.2}
-          saturation={0.4}
-          glowIntensity={0.4}
-          starSpeed={0.3}
-          twinkleIntensity={0.4}
-          rotationSpeed={0.05}
-          mouseRepulsion={false}
-          transparent={false}
-        />
-      </div>
+      <div className="professional-bg" />
 
       <div className="app-layout">
         {/* Simple header with sign-in state */}

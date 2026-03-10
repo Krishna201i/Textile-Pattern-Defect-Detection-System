@@ -40,55 +40,53 @@ export default function LoginPage({ onLogin }) {
   };
 
   return (
-    <div className="auth-page modern">
-      <div className="auth-card modern-card">
+    <div className="auth-page modern auth-page-pro">
+      <div className="auth-card modern-card auth-card-pro">
         <div className="auth-split">
-          <div className="auth-side auth-side-illustration">
-            <div className="brand">
+          <div className="auth-side auth-side-illustration auth-side-pro">
+            <div className="brand auth-brand-pro">
+              <p className="auth-eyebrow">Enterprise Quality Platform</p>
               <h3>TextileGuard</h3>
-              <p>AI fabric defect detection</p>
+              <p>Defect intelligence for modern textile operations</p>
             </div>
-            <div className="side-note">Securely save your scans and track analytics.</div>
+            <ul className="auth-side-points">
+              <li>Pattern-based inspection workflow</li>
+              <li>Traceable scan history and analytics</li>
+              <li>Role-based access with secure sign-in</li>
+            </ul>
           </div>
 
           <div className="auth-side auth-side-form">
             <h2>Welcome back</h2>
-            <p className="muted">Sign in to continue to your dashboard</p>
-
-            <div className="social-row">
-              <button className="btn btn-outline" disabled>Continue with Google</button>
-              <button className="btn btn-outline" disabled style={{ marginLeft: 8 }}>Continue with GitHub</button>
-            </div>
-
-            <div className="divider"><span>or</span></div>
+            <p className="muted">Sign in to access your dashboard and scan history.</p>
 
             <form onSubmit={handleSubmit}>
               <label>Email</label>
               <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="you@example.com" />
 
               <label style={{ marginTop: 10 }}>Password</label>
-              <div style={{ position: 'relative' }}>
+              <div className="password-field-wrap">
                 <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} required placeholder="Password" />
-                <button type="button" className="btn btn-sm btn-outline" onClick={() => setShowPassword(s => !s)} style={{ position: 'absolute', right: 8, top: 8 }}>{showPassword ? 'Hide' : 'Show'}</button>
+                <button type="button" className="btn btn-sm btn-outline password-toggle" onClick={() => setShowPassword(s => !s)}>{showPassword ? 'Hide' : 'Show'}</button>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div className="auth-form-meta">
+                <label className="remember-check">
                   <input type="checkbox" checked readOnly />
                   <span className="muted">Remember me</span>
                 </label>
                 <button type="button" className="link-like" onClick={handleReset}>Forgot password?</button>
               </div>
 
-              <div style={{ marginTop: 16 }}>
+              <div className="auth-submit-row">
                 <button type="submit" className="btn btn-primary" disabled={loading}>{loading ? 'Signing in...' : 'Sign in'}</button>
               </div>
 
-              {error && <div className="error" style={{ marginTop: 12 }}>{error}</div>}
-              {info && <div className="info" style={{ marginTop: 12 }}>{info}</div>}
+              {error && <div className="error auth-message">{error}</div>}
+              {info && <div className="info auth-message">{info}</div>}
             </form>
 
-            <div style={{ marginTop: 14 }}>Don't have an account? <Link to="/signup">Create one</Link></div>
+            <div className="auth-footer-text">Don&apos;t have an account? <Link to="/signup">Create one</Link></div>
           </div>
         </div>
       </div>
