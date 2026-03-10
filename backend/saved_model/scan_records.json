@@ -1,1 +1,14 @@
-[]
+[
+  {
+    "id": "01893a03-3673-48fc-b262-d26cd0ba30e3",
+    "owner": "local",
+    "filename": "camera_capture_1773154770670.jpg",
+    "label": "defective",
+    "confidence": 75.43,
+    "defect_probability": 75.43,
+    "pipeline": "cnn_cv_hybrid",
+    "time": "2026-03-10T20:29:30.785833",
+    "inference_ms": 87.84,
+    "admin_note": ""
+  }
+]

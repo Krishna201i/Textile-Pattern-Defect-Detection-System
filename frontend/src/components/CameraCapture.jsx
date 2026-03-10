@@ -2,7 +2,13 @@ import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { FiCamera, FiVideo, FiRefreshCw } from "react-icons/fi";
 
-function evaluateFrameQuality(imageData) {
+const QUALITY_THRESHOLDS = {
+  minBrightness: 40,
+  maxBrightness: 225,
+  minBlurVariance: 35,
+};
+
+function evaluateFrameQuality(imageData, thresholds = QUALITY_THRESHOLDS) {
   const { data, width, height } = imageData;
   const gray = new Float32Array(width * height);
 
@@ -47,8 +53,10 @@ function evaluateFrameQuality(imageData) {
   return {
     brightness: Number(meanBrightness.toFixed(1)),
     blurVariance: Number(varianceLap.toFixed(1)),
-    isBrightnessGood: meanBrightness >= 55 && meanBrightness <= 210,
-    isSharpEnough: varianceLap >= 60,
+    isBrightnessGood:
+      meanBrightness >= thresholds.minBrightness &&
+      meanBrightness <= thresholds.maxBrightness,
+    isSharpEnough: varianceLap >= thresholds.minBlurVariance,
   };
 }
 
@@ -64,6 +72,8 @@ function CameraCapture({
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
   const [cameraReady, setCameraReady] = useState(false);
+  const [liveQuality, setLiveQuality] = useState(null);
+  const [thresholds, setThresholds] = useState(QUALITY_THRESHOLDS);
 
   const stopCamera = () => {
     if (streamRef.current) {
@@ -101,6 +111,34 @@ function CameraCapture({
     };
   }, []);
 
+  useEffect(() => {
+    let timerId;
+
+    if (cameraReady && videoRef.current && canvasRef.current) {
+      timerId = setInterval(() => {
+        const video = videoRef.current;
+        const canvas = canvasRef.current;
+        if (!video || !canvas || video.videoWidth < 2 || video.videoHeight < 2) {
+          return;
+        }
+
+        const ctx = canvas.getContext("2d");
+        const sampleWidth = 320;
+        const sampleHeight = 240;
+        canvas.width = sampleWidth;
+        canvas.height = sampleHeight;
+        ctx.drawImage(video, 0, 0, sampleWidth, sampleHeight);
+
+        const sampleData = ctx.getImageData(0, 0, sampleWidth, sampleHeight);
+        setLiveQuality(evaluateFrameQuality(sampleData, thresholds));
+      }, 700);
+    }
+
+    return () => {
+      if (timerId) clearInterval(timerId);
+    };
+  }, [cameraReady, thresholds]);
+
   const captureAndPredict = async () => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
@@ -118,7 +156,7 @@ function CameraCapture({
     ctx.drawImage(video, 0, 0, width, height);
 
     const imageData = ctx.getImageData(0, 0, width, height);
-    const quality = evaluateFrameQuality(imageData);
+    const quality = evaluateFrameQuality(imageData, thresholds);
 
     if (!quality.isBrightnessGood || !quality.isSharpEnough) {
       const reasons = [];
@@ -197,6 +235,69 @@ function CameraCapture({
           <FiRefreshCw /> Refresh Camera
         </button>
       </div>
+
+      {liveQuality && (
+        <div className="camera-quality-meter">
+          <div className="camera-quality-row">
+            <span>Brightness</span>
+            <span>{liveQuality.brightness}</span>
+          </div>
+          <div className="camera-quality-row">
+            <span>Blur Score</span>
+            <span>{liveQuality.blurVariance}</span>
+          </div>
+          <div className="camera-quality-tags">
+            <span className={`camera-quality-tag ${liveQuality.isBrightnessGood ? "ok" : "bad"}`}>
+              {liveQuality.isBrightnessGood ? "Lighting OK" : "Lighting Adjust"}
+            </span>
+            <span className={`camera-quality-tag ${liveQuality.isSharpEnough ? "ok" : "bad"}`}>
+              {liveQuality.isSharpEnough ? "Sharpness OK" : "Hold Steady"}
+            </span>
+          </div>
+
+          <div className="camera-thresholds-grid">
+            <label>
+              Min Brightness
+              <input
+                type="number"
+                min="0"
+                max="255"
+                value={thresholds.minBrightness}
+                onChange={(e) => {
+                  const value = Number(e.target.value || 0);
+                  setThresholds((prev) => ({ ...prev, minBrightness: value }));
+                }}
+              />
+            </label>
+            <label>
+              Max Brightness
+              <input
+                type="number"
+                min="0"
+                max="255"
+                value={thresholds.maxBrightness}
+                onChange={(e) => {
+                  const value = Number(e.target.value || 0);
+                  setThresholds((prev) => ({ ...prev, maxBrightness: value }));
+                }}
+              />
+            </label>
+            <label>
+              Min Blur Score
+              <input
+                type="number"
+                min="0"
+                max="1000"
+                value={thresholds.minBlurVariance}
+                onChange={(e) => {
+                  const value = Number(e.target.value || 0);
+                  setThresholds((prev) => ({ ...prev, minBlurVariance: value }));
+                }}
+              />
+            </label>
+          </div>
+        </div>
+      )}
 
       <p className="camera-hint">
         <FiVideo /> Camera mode runs a quality check before prediction.
