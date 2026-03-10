@@ -10,5 +10,31 @@
     "time": "2026-03-10T20:29:30.785833",
     "inference_ms": 87.84,
     "admin_note": ""
+  },
+  {
+    "id": "85903b2b-af63-4984-89d0-d73bfa75a3a8",
+    "owner": "local",
+    "filename": "WhatsApp_Image_2026-03-10_at_8.50.01_PM.jpeg",
+    "label": "defective",
+    "confidence": 75.96,
+    "defect_probability": 75.96,
+    "pipeline": "cnn_cv_hybrid",
+    "time": "2026-03-10T20:53:12.122724",
+    "inference_ms": 162.64,
+    "admin_note": "",
+    "request_id": "1d9de1a4-839d-42d7-a774-ac0c26b22e7a"
+  },
+  {
+    "id": "d3551496-7bab-4230-828e-b005c823fa82",
+    "owner": "local",
+    "filename": "WhatsApp_Image_2026-03-10_at_8.50.01_PM.jpeg",
+    "label": "defective",
+    "confidence": 75.96,
+    "defect_probability": 75.96,
+    "pipeline": "cnn_cv_hybrid",
+    "time": "2026-03-10T20:53:36.051407",
+    "inference_ms": 125.64,
+    "admin_note": "",
+    "request_id": "bd061f44-ec96-4410-a995-943c7d8cef80"
   }
 ]

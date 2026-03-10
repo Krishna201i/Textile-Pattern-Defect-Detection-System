@@ -67,6 +67,8 @@ function CameraCapture({
   setError,
   setFilename,
   loading,
+  userId,
+  source = "camera",
 }) {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -189,13 +191,20 @@ function CameraCapture({
       const imageFile = new File([blob], generatedName, { type: "image/jpeg" });
       const formData = new FormData();
       formData.append("image", imageFile);
+      if (userId) formData.append("owner", userId);
+      formData.append("source", source);
 
       const response = await axios.post("/api/predict", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
       if (response.data.success) {
-        setResult(response.data.prediction);
+        setResult({
+          ...response.data.prediction,
+          request_id: response.data.request_id,
+          trace_id: response.data.trace_id,
+          source,
+        });
       } else {
         setError(response.data.error || "Prediction failed");
       }

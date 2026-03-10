@@ -217,6 +217,10 @@ def predict():
         )
 
     request_id = str(uuid.uuid4())
+    owner = str((request.form.get("owner") or "local")).strip()[:120] or "local"
+    source = str((request.form.get("source") or "upload")).strip().lower()
+    if source not in {"upload", "camera"}:
+        source = "upload"
     filename = secure_filename(file.filename)
     ext = os.path.splitext(filename)[1]
     temp_name = f"{request_id}{ext}"
@@ -232,12 +236,15 @@ def predict():
         records = _load_records()
         records.append({
             "id": request_id,
-            "owner": "local",
+            "owner": owner,
             "filename": filename,
             "label": result.get("label", "unknown"),
             "confidence": _to_float(result.get("confidence", 0.0)),
             "defect_probability": _to_float(result.get("defect_probability", 0.0)),
+            "cnn_defect_probability": _to_float(result.get("cnn_defect_probability", 0.0)),
+            "cv_defect_probability": _to_float(result.get("cv_defect_probability", 0.0)),
             "pipeline": result.get("pipeline", "unknown"),
+            "source": source,
             "time": datetime.now().isoformat(),
             "inference_ms": inference_ms,
             "admin_note": "",
@@ -302,6 +309,7 @@ def admin_records():
     records = sorted(_load_records(), key=lambda item: item.get("time", ""), reverse=True)
 
     label_filter = (request.args.get("label") or "").strip().lower()
+    owner_filter = (request.args.get("owner") or "").strip()
     query = (request.args.get("q") or "").strip().lower()
     limit = int(request.args.get("limit", "200"))
     offset = int(request.args.get("offset", "0"))
@@ -310,6 +318,9 @@ def admin_records():
 
     if label_filter in VALID_LABELS:
         records = [record for record in records if record.get("label") == label_filter]
+
+    if owner_filter:
+        records = [record for record in records if str(record.get("owner", "")) == owner_filter]
 
     if query:
         records = [
@@ -331,6 +342,45 @@ def admin_records():
             "offset": offset,
         },
     })
+
+
+@app.route("/api/admin/records", methods=["POST"])
+def admin_create_record():
+    """Create a new admin record directly (used by user sync fallback)."""
+    payload = request.get_json(silent=True) or {}
+    if not isinstance(payload, dict):
+        return _json_error("Invalid JSON payload.", 400, code="invalid_payload")
+
+    label = payload.get("label", "unknown")
+    if label not in VALID_LABELS:
+        return _json_error("Invalid label value.", 400, code="invalid_label")
+
+    owner = str(payload.get("owner", "local")).strip()[:120] or "local"
+    source = str(payload.get("source", "upload")).strip().lower()
+    if source not in {"upload", "camera"}:
+        source = "upload"
+
+    record = {
+        "id": str(uuid.uuid4()),
+        "owner": owner,
+        "filename": str(payload.get("filename", "image"))[:240],
+        "label": label,
+        "confidence": _clamp_percent(payload.get("confidence", 0.0)),
+        "defect_probability": _clamp_percent(payload.get("defect_probability", 0.0)),
+        "cnn_defect_probability": _clamp_percent(payload.get("cnn_defect_probability", 0.0)),
+        "cv_defect_probability": _clamp_percent(payload.get("cv_defect_probability", 0.0)),
+        "pipeline": str(payload.get("pipeline", "cnn_cv_hybrid"))[:60],
+        "source": source,
+        "time": datetime.now().isoformat(),
+        "inference_ms": _to_float(payload.get("inference_ms", 0.0)),
+        "admin_note": str(payload.get("admin_note", payload.get("notes", "")))[:MAX_NOTE_LEN],
+        "request_id": g.request_id,
+    }
+
+    records = _load_records()
+    records.append(record)
+    _save_records(records)
+    return jsonify({"success": True, "record": record}), 201
 
 
 @app.route("/api/admin/summary", methods=["GET"])

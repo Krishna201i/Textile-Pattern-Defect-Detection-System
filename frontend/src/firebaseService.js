@@ -1,108 +1,104 @@
-// Firestore + Storage persistence for scan history (requires authenticated user).
+import { auth } from './firebaseClient';
 
-import { db, storage, auth } from './firebaseClient';
-
-const isFirebaseConfigured = Boolean(db && storage && auth);
-
-export async function fetchHistory() {
-  if (!isFirebaseConfigured) return [];
-
-  const { collection, query, orderBy, where, getDocs } = await import('firebase/firestore');
-  const user = auth.currentUser;
-  if (!user) return [];
-
-  const col = collection(db, 'scans');
-  const q = query(col, where('owner', '==', user.uid), orderBy('created_at', 'asc'));
-  const snap = await getDocs(q);
-  const items = [];
-  snap.forEach((doc) => {
-    const data = doc.data();
-    items.push({
-      id: doc.id,
-      label: data.label || 'unknown',
-      confidence: Number(data.confidence || 0),
-      defect_probability: Number(data.defect_probability || 0),
-      source: data.source || 'upload',
-      pipeline: data.pipeline || 'cnn_cv_hybrid',
-      cnn_defect_probability: Number(data.cnn_defect_probability || 0),
-      cv_defect_probability: Number(data.cv_defect_probability || 0),
-      preview: data.image_url || null,
-      filename: data.filename || null,
-      time: (data.created_at && data.created_at.toDate) ? data.created_at.toDate().toLocaleTimeString() : (data.time || new Date().toLocaleTimeString()),
-    });
-  });
-  return items;
-}
-
-export async function savePrediction(entry) {
-  if (!isFirebaseConfigured) return null;
-
-  const { collection, addDoc, serverTimestamp, doc, updateDoc } = await import('firebase/firestore');
-  const { ref: storageRef, uploadString, getDownloadURL } = await import('firebase/storage');
-
-  const user = auth.currentUser;
-  if (!user) return null;
-
-  const col = collection(db, 'scans');
-  const docRef = await addDoc(col, {
-    label: entry.label || 'unknown',
-    confidence: Number(entry.confidence || 0),
-    defect_probability: Number(entry.defect_probability || 0),
-    source: entry.source || 'upload',
-    pipeline: entry.pipeline || 'cnn_cv_hybrid',
-    cnn_defect_probability: Number(entry.cnn_defect_probability || 0),
-    cv_defect_probability: Number(entry.cv_defect_probability || 0),
-    filename: entry.filename || null,
-    created_at: serverTimestamp(),
-    time: entry.time || new Date().toLocaleTimeString(),
-    image_url: '',
-    owner: user.uid,
-  });
-
-  let downloadUrl = null;
-  if (entry.preview && entry.preview.startsWith('data:')) {
-    const fileRef = storageRef(storage, `scans/${user.uid}/${docRef.id}.jpg`);
-    await uploadString(fileRef, entry.preview, 'data_url');
-    downloadUrl = await getDownloadURL(fileRef);
-    await updateDoc(doc(db, 'scans', docRef.id), { image_url: downloadUrl });
-  }
-
+function mapRecordToHistoryItem(record) {
   return {
-    id: docRef.id,
-    label: entry.label || 'unknown',
-    confidence: Number(entry.confidence || 0),
-    defect_probability: Number(entry.defect_probability || 0),
-    source: entry.source || 'upload',
-    pipeline: entry.pipeline || 'cnn_cv_hybrid',
-    cnn_defect_probability: Number(entry.cnn_defect_probability || 0),
-    cv_defect_probability: Number(entry.cv_defect_probability || 0),
-    preview: downloadUrl || entry.preview || null,
-    filename: entry.filename || null,
-    time: entry.time || new Date().toLocaleTimeString(),
+    id: record.id,
+    request_id: record.id,
+    label: record.label || 'unknown',
+    confidence: Number(record.confidence || 0),
+    defect_probability: Number(record.defect_probability || 0),
+    source: record.source || 'upload',
+    pipeline: record.pipeline || 'cnn_cv_hybrid',
+    cnn_defect_probability: Number(record.cnn_defect_probability || 0),
+    cv_defect_probability: Number(record.cv_defect_probability || 0),
+    preview: record.image_url || null,
+    filename: record.filename || null,
+    time: record.time || new Date().toLocaleTimeString(),
   };
 }
 
-export async function clearAllPredictions() {
-  if (!isFirebaseConfigured) return false;
+export async function fetchHistory() {
+  const user = auth.currentUser;
+  if (!user) return [];
 
-  const { collection, getDocs, deleteDoc, doc, query, where } = await import('firebase/firestore');
-  const { ref: storageRef, deleteObject } = await import('firebase/storage');
+  const owner = encodeURIComponent(user.uid);
+  const response = await fetch(`/api/admin/records?owner=${owner}&limit=1000&offset=0`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch history from backend');
+  }
+
+  const payload = await response.json();
+  const records = Array.isArray(payload.records) ? payload.records : [];
+
+  return records
+    .slice()
+    .sort((a, b) => String(a.time || '').localeCompare(String(b.time || '')))
+    .map(mapRecordToHistoryItem);
+}
+
+export async function savePrediction(entry) {
+  const user = auth.currentUser;
+  if (!user) return null;
+
+  const basePayload = {
+    owner: user.uid,
+    label: entry.label || 'unknown',
+    confidence: Number(entry.confidence || 0),
+    defect_probability: Number(entry.defect_probability || 0),
+    source: entry.source || 'upload',
+    pipeline: entry.pipeline || 'cnn_cv_hybrid',
+    cnn_defect_probability: Number(entry.cnn_defect_probability || 0),
+    cv_defect_probability: Number(entry.cv_defect_probability || 0),
+    filename: entry.filename || 'image',
+    admin_note: '',
+  };
+
+  let response;
+
+  if (entry.request_id) {
+    response = await fetch(`/api/admin/records/${encodeURIComponent(entry.request_id)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(basePayload),
+    });
+  } else {
+    response = await fetch('/api/admin/records', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(basePayload),
+    });
+  }
+
+  if (!response.ok) {
+    throw new Error('Failed to save prediction to backend records');
+  }
+
+  const payload = await response.json();
+  const savedRecord = payload.record || {
+    ...basePayload,
+    id: entry.request_id,
+    time: entry.time,
+  };
+
+  return mapRecordToHistoryItem(savedRecord);
+}
+
+export async function clearAllPredictions() {
   const user = auth.currentUser;
   if (!user) return false;
 
-  const col = collection(db, 'scans');
-  const q = query(col, where('owner', '==', user.uid));
-  const snap = await getDocs(q);
-  const deletes = snap.docs.map(async (d) => {
-    try {
-      const data = d.data();
-      if (data && data.image_url) {
-        const fileRef = storageRef(storage, `scans/${user.uid}/${d.id}.jpg`);
-        await deleteObject(fileRef).catch(() => {});
-      }
-    } catch (e) {}
-    await deleteDoc(doc(db, 'scans', d.id));
-  });
-  await Promise.all(deletes);
+  const owner = encodeURIComponent(user.uid);
+  const listResponse = await fetch(`/api/admin/records?owner=${owner}&limit=1000&offset=0`);
+  if (!listResponse.ok) return false;
+
+  const payload = await listResponse.json();
+  const records = Array.isArray(payload.records) ? payload.records : [];
+
+  await Promise.all(
+    records.map((record) =>
+      fetch(`/api/admin/records/${encodeURIComponent(record.id)}`, { method: 'DELETE' })
+    )
+  );
+
   return true;
 }

@@ -36,6 +36,7 @@ function DetectPage({ onResult }) {
     if (!result) return;
     // Prepare entry shape expected by savePrediction
     const entry = {
+      request_id: result.request_id,
       label: result.label,
       confidence: result.confidence,
       defect_probability: result.defect_probability,
@@ -110,6 +111,8 @@ function DetectPage({ onResult }) {
               setError={setError}
               setFilename={handleFilename}
               loading={loading}
+              userId={auth.currentUser?.uid}
+              source="upload"
             />
           ) : (
             <CameraCapture
@@ -119,6 +122,8 @@ function DetectPage({ onResult }) {
               setError={setError}
               setFilename={handleFilename}
               loading={loading}
+              userId={auth.currentUser?.uid}
+              source="camera"
             />
           )}
 

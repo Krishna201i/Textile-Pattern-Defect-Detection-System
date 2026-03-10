@@ -3,7 +3,7 @@ import { useDropzone } from "react-dropzone";
 import { FiUploadCloud } from "react-icons/fi";
 import axios from "axios";
 
-function ImageUpload({ setResult, setPreview, setLoading, setError, setFilename, loading }) {
+function ImageUpload({ setResult, setPreview, setLoading, setError, setFilename, loading, userId, source = "upload" }) {
   const onDrop = useCallback(
     async (acceptedFiles) => {
       const file = acceptedFiles[0];
@@ -23,6 +23,8 @@ function ImageUpload({ setResult, setPreview, setLoading, setError, setFilename,
       // Send to backend
       const formData = new FormData();
       formData.append("image", file);
+      if (userId) formData.append("owner", userId);
+      formData.append("source", source);
 
       try {
         const response = await axios.post("/api/predict", formData, {
@@ -30,7 +32,12 @@ function ImageUpload({ setResult, setPreview, setLoading, setError, setFilename,
         });
 
         if (response.data.success) {
-          setResult(response.data.prediction);
+          setResult({
+            ...response.data.prediction,
+            request_id: response.data.request_id,
+            trace_id: response.data.trace_id,
+            source,
+          });
         } else {
           setError(response.data.error || "Prediction failed");
         }
@@ -43,7 +50,7 @@ function ImageUpload({ setResult, setPreview, setLoading, setError, setFilename,
         setLoading(false);
       }
     },
-    [setResult, setPreview, setLoading, setError]
+    [setResult, setPreview, setLoading, setError, userId, source]
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
