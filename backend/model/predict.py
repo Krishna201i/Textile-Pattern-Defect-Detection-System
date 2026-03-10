@@ -9,6 +9,11 @@ import numpy as np
 from tensorflow.keras.models import load_model
 from .preprocess import preprocess_single_image
 
+try:
+    import cv2
+except Exception:
+    cv2 = None
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MODEL_PATH = os.path.join(BASE_DIR, "saved_model", "textile_defect_model.keras")
 
@@ -54,10 +59,45 @@ def _deterministic_mock_prediction(image_path: str) -> dict:
     return {
         "model_available": False,
         "mock": True,
+        "pipeline": "mock",
         "label": label,
         "confidence": round(confidence * 100, 2),
         "defect_probability": round((1.0 - probability) * 100, 2),
         "note": "deterministic mock prediction (no trained model present)",
+    }
+
+
+def _compute_cv_defect_probability(image_path: str) -> tuple[float, dict]:
+    """Estimate defect probability from classical CV features.
+
+    Returns a tuple of (probability, diagnostics), where probability is in [0, 1].
+    """
+    if cv2 is None:
+        return 0.5, {"cv_available": False, "reason": "opencv_not_installed"}
+
+    image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+    if image is None:
+        return 0.5, {"cv_available": False, "reason": "image_load_failed"}
+
+    image = cv2.GaussianBlur(image, (3, 3), 0)
+
+    laplacian = cv2.Laplacian(image, cv2.CV_64F)
+    laplacian_var = float(np.var(np.abs(laplacian)))
+
+    edges = cv2.Canny(image, 80, 160)
+    edge_density = float(np.count_nonzero(edges)) / float(edges.size)
+
+    normalized_texture = min(laplacian_var / 1800.0, 1.0)
+    normalized_edges = min(edge_density / 0.22, 1.0)
+    cv_prob = (0.65 * normalized_texture) + (0.35 * normalized_edges)
+    cv_prob = float(max(0.0, min(1.0, cv_prob)))
+
+    return cv_prob, {
+        "cv_available": True,
+        "laplacian_variance": round(laplacian_var, 4),
+        "edge_density": round(edge_density, 4),
+        "texture_score": round(normalized_texture, 4),
+        "edge_score": round(normalized_edges, 4),
     }
 
 
@@ -86,15 +126,25 @@ def predict_image(image_path):
 
     processed = preprocess_single_image(image_path)
     prediction = model.predict(processed, verbose=0)
-    probability = float(prediction[0][0])
+    cnn_non_defective_prob = float(prediction[0][0])
+    cnn_defect_prob = 1.0 - cnn_non_defective_prob
 
-    # sigmoid output: close to 0 = defective, close to 1 = non_defective
-    label = CLASS_LABELS[1] if probability >= 0.5 else CLASS_LABELS[0]
-    confidence = probability if probability >= 0.5 else 1 - probability
+    cv_defect_prob, cv_details = _compute_cv_defect_probability(image_path)
+
+    hybrid_defect_prob = (0.75 * cnn_defect_prob) + (0.25 * cv_defect_prob)
+    hybrid_defect_prob = float(max(0.0, min(1.0, hybrid_defect_prob)))
+
+    non_defective_prob = 1.0 - hybrid_defect_prob
+    label = CLASS_LABELS[1] if non_defective_prob >= 0.5 else CLASS_LABELS[0]
+    confidence = non_defective_prob if non_defective_prob >= 0.5 else hybrid_defect_prob
 
     return {
         "model_available": True,
+        "pipeline": "cnn_cv_hybrid",
         "label": label,
         "confidence": round(confidence * 100, 2),
-        "defect_probability": round((1 - probability) * 100, 2),
+        "defect_probability": round(hybrid_defect_prob * 100, 2),
+        "cnn_defect_probability": round(cnn_defect_prob * 100, 2),
+        "cv_defect_probability": round(cv_defect_prob * 100, 2),
+        "cv_details": cv_details,
     }

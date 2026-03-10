@@ -74,7 +74,7 @@ def predict():
 
 @app.route("/api/model-info", methods=["GET"])
 def model_info():
-    """Return information about the trained model."""
+    """Return information about the trained model pipeline."""
     history_path = os.path.join(
         os.path.dirname(os.path.abspath(__file__)),
         "saved_model",
@@ -82,10 +82,11 @@ def model_info():
     )
 
     info = {
-        "model_name": "MobileNetV2 (Transfer Learning)",
-        "task": "Binary Classification",
+        "model_name": "Custom CNN + Computer Vision Hybrid",
+        "task": "Binary Classification + CV Feature Fusion",
         "classes": ["defective", "non_defective"],
         "input_size": "224x224x3",
+        "cv_features": ["Laplacian texture", "Edge density"],
     }
 
     if os.path.exists(history_path):

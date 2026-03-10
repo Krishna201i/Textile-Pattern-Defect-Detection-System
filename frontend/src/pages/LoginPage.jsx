@@ -46,7 +46,7 @@ export default function LoginPage({ onLogin }) {
           <div className="auth-side auth-side-illustration auth-side-pro">
             <div className="brand auth-brand-pro">
               <p className="auth-eyebrow">Enterprise Quality Platform</p>
-              <h3>TextileGuard</h3>
+              <h3 className="auth-brand-title">TextileGuard</h3>
               <p>Defect intelligence for modern textile operations</p>
             </div>
             <ul className="auth-side-points">
@@ -72,7 +72,7 @@ export default function LoginPage({ onLogin }) {
 
               <div className="auth-form-meta">
                 <label className="remember-check">
-                  <input type="checkbox" checked readOnly />
+                  <input type="checkbox" />
                   <span className="muted">Remember me</span>
                 </label>
                 <button type="button" className="link-like" onClick={handleReset}>Forgot password?</button>

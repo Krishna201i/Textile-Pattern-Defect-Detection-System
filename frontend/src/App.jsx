@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, useNavigate, useLocation, Navigate } from "react-router-dom";
 import { FiHome, FiSearch, FiBarChart2, FiInfo } from "react-icons/fi";
 import Dock from "./components/Dock";
+import GradientText from "./components/GradientText";
 import Dashboard from "./pages/Dashboard";
 import DetectPage from "./pages/DetectPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
@@ -138,7 +139,14 @@ function App() {
         {/* Simple header with sign-in state */}
         <header className="app-header" style={{ width: '100%', maxWidth: 1200, padding: '12px 40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <h1 style={{ margin: 0, fontSize: 16 }}>TextileGuard</h1>
+            <GradientText
+              className="app-brand-gradient"
+              colors={['#7aa2ff', '#bcd3ff', '#d9e5ff']}
+              animationSpeed={10}
+              direction="horizontal"
+            >
+              <h1 style={{ margin: 0, fontSize: 16 }}>TextileGuard</h1>
+            </GradientText>
             <small style={{ color: 'var(--text-muted)' }}>{user ? user.email : 'Not signed in'}</small>
           </div>
 

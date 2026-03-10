@@ -1,6 +1,6 @@
 """
 Model training script for textile defect detection.
-Uses MobileNetV2 with transfer learning for binary classification.
+Uses a custom CNN for binary classification.
 """
 
 import os
@@ -9,9 +9,8 @@ import json
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from tensorflow.keras.applications import MobileNetV2
-from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Dense, GlobalAveragePooling2D, Dropout
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Conv2D, MaxPooling2D, Dense, Dropout, Flatten, BatchNormalization
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 
@@ -31,24 +30,31 @@ LEARNING_RATE = 0.0001
 
 
 def build_model():
-    """Build a MobileNetV2-based binary classification model."""
-    base_model = MobileNetV2(
-        weights="imagenet",
-        include_top=False,
-        input_shape=(IMG_HEIGHT, IMG_WIDTH, 3),
-    )
+    """Build a custom CNN-based binary classification model."""
+    model = Sequential([
+        Conv2D(32, (3, 3), activation="relu", padding="same", input_shape=(IMG_HEIGHT, IMG_WIDTH, 3)),
+        BatchNormalization(),
+        MaxPooling2D((2, 2)),
 
-    # Freeze the base model layers (use pre-trained features)
-    base_model.trainable = False
+        Conv2D(64, (3, 3), activation="relu", padding="same"),
+        BatchNormalization(),
+        MaxPooling2D((2, 2)),
 
-    # Add custom classification head
-    x = base_model.output
-    x = GlobalAveragePooling2D()(x)
-    x = Dense(128, activation="relu")(x)
-    x = Dropout(0.3)(x)
-    output = Dense(1, activation="sigmoid")(x)
+        Conv2D(128, (3, 3), activation="relu", padding="same"),
+        BatchNormalization(),
+        MaxPooling2D((2, 2)),
 
-    model = Model(inputs=base_model.input, outputs=output)
+        Conv2D(256, (3, 3), activation="relu", padding="same"),
+        BatchNormalization(),
+        MaxPooling2D((2, 2)),
+
+        Flatten(),
+        Dense(256, activation="relu"),
+        Dropout(0.4),
+        Dense(64, activation="relu"),
+        Dropout(0.25),
+        Dense(1, activation="sigmoid"),
+    ])
 
     model.compile(
         optimizer=Adam(learning_rate=LEARNING_RATE),
@@ -108,7 +114,7 @@ def main():
     print(f"Test samples: {test_gen.samples}")
 
     # Build model
-    print("\nBuilding MobileNetV2 model...")
+    print("\nBuilding CNN model...")
     model = build_model()
     model.summary()
 

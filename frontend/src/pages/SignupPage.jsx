@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { signUp } from '../authService';
+import GradientText from '../components/GradientText';
 
 export default function SignupPage({ onSignup }) {
   const [email, setEmail] = useState('');
@@ -31,7 +32,14 @@ export default function SignupPage({ onSignup }) {
   return (
     <div className="auth-page">
       <div className="auth-card">
-        <h2 style={{ marginBottom: 8 }}>Create account</h2>
+        <GradientText
+          className="auth-gradient-title"
+          colors={['#7aa2ff', '#bcd3ff', '#d9e5ff']}
+          animationSpeed={10}
+          direction="horizontal"
+        >
+          <h2 style={{ marginBottom: 8 }}>Create account</h2>
+        </GradientText>
         <p style={{ color: 'var(--text-muted)', marginBottom: 12 }}>Create an account to save scans and access analytics</p>
 
         <form onSubmit={handleSubmit}>
