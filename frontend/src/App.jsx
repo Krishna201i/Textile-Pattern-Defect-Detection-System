@@ -84,8 +84,8 @@ function App() {
   const [adminCheckReady, setAdminCheckReady] = useState(false);
 
   useEffect(() => {
-    // Enforce single light-mode visual system across the app.
-    document.documentElement.setAttribute("data-theme", "light");
+    // Remove any stale data-theme attribute for dark-first design
+    document.documentElement.removeAttribute("data-theme");
   }, []);
 
   // Listen to auth state
@@ -174,7 +174,7 @@ function App() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <GradientText
               className="app-brand-gradient"
-              colors={['#5e6a78', '#8f9aa7', '#4f7c97']}
+              colors={['#F59E0B', '#D97706', '#F59E0B']}
               animationSpeed={10}
               direction="horizontal"
             >

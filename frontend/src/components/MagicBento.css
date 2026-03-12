@@ -1,12 +1,12 @@
 :root {
-  --hue: 27;
-  --sat: 69%;
-  --white: #1f2f3b;
-  --purple-primary: rgba(79, 124, 151, 1);
-  --purple-glow: rgba(79, 124, 151, 0.2);
-  --purple-border: rgba(79, 124, 151, 0.6);
-  --bento-border-color: #aab6c1;
-  --background-dark: #f3f5f7;
+  --hue: 37;
+  --sat: 91%;
+  --white: #FAFAFA;
+  --purple-primary: rgba(245, 158, 11, 1);
+  --purple-glow: rgba(245, 158, 11, 0.2);
+  --purple-border: rgba(245, 158, 11, 0.6);
+  --bento-border-color: rgba(255, 255, 255, 0.08);
+  --background-dark: #0A0A0F;
 }
 
 .card-grid {
@@ -26,12 +26,14 @@
   width: 100%;
   max-width: 100%;
   padding: 1.25em;
-  border-radius: 20px;
-  border: 1px solid rgba(126, 141, 156, 0.36);
-  background: linear-gradient(155deg, rgba(247, 249, 251, 0.95), rgba(235, 239, 243, 0.92));
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(26, 26, 36, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   font-weight: 300;
   overflow: hidden;
-  transition: all 0.3s ease;
+  transition: all 300ms ease-out;
   --glow-x: 50%;
   --glow-y: 50%;
   --glow-intensity: 0;
@@ -39,10 +41,10 @@
 }
 
 .magic-bento-card:hover {
-  transform: translateY(-2px);
-  border-color: rgba(79, 124, 151, 0.4);
-  background: linear-gradient(155deg, rgba(250, 252, 253, 0.98), rgba(236, 241, 245, 0.95));
-  box-shadow: 0 12px 28px rgba(44, 56, 68, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  transform: translateY(-2px) scale(1.02);
+  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(26, 26, 36, 0.8);
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.3);
 }
 
 .magic-bento-card__header,
@@ -149,8 +151,8 @@
   padding: 6px;
   background: radial-gradient(
     var(--glow-radius) circle at var(--glow-x) var(--glow-y),
-    rgba(79, 124, 151, calc(var(--glow-intensity) * 0.8)) 0%,
-    rgba(79, 124, 151, calc(var(--glow-intensity) * 0.4)) 30%,
+    rgba(245, 158, 11, calc(var(--glow-intensity) * 0.8)) 0%,
+    rgba(245, 158, 11, calc(var(--glow-intensity) * 0.4)) 30%,
     transparent 60%
   );
   border-radius: inherit;
@@ -174,7 +176,7 @@
 
 .magic-bento-card--border-glow:hover {
   box-shadow:
-    0 10px 22px rgba(44, 56, 68, 0.2),
+    0 10px 15px rgba(0, 0, 0, 0.3),
     0 0 30px var(--purple-glow);
 }
 
@@ -190,14 +192,14 @@
   left: -2px;
   right: -2px;
   bottom: -2px;
-  background: rgba(79, 124, 151, 0.2);
+  background: rgba(245, 158, 11, 0.2);
   border-radius: 50%;
   z-index: -1;
 }
 
 .particle-container:hover {
   box-shadow:
-    0 10px 22px rgba(44, 56, 68, 0.15),
+    0 10px 15px rgba(0, 0, 0, 0.3),
     0 0 30px var(--purple-glow);
 }
 

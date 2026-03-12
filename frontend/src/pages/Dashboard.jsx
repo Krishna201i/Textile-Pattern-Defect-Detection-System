@@ -19,7 +19,7 @@ function Dashboard({ history }) {
       ]
     : [{ name: "No Data", value: 1 }];
 
-  const PIE_COLORS = total > 0 ? ["#ef4444", "#22c55e"] : ["#334155"];
+  const PIE_COLORS = total > 0 ? ["#ef4444", "#22c55e"] : ["#1A1A24"];
 
   const recent = [...history].reverse().slice(0, 5);
 

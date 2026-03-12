@@ -75,5 +75,38 @@
     "inference_ms": 69.89,
     "admin_note": "",
     "request_id": "2db1be42-6b73-442c-8b6c-5e195391f487"
+  },
+  {
+    "id": "cf8fe6ac-edd6-42af-9cb8-cb8b0479c46b",
+    "owner": "KLgw0yAnIxTG61oMT8SvAyFRgFD3",
+    "filename": "camera_capture_1773293169667.jpg",
+    "label": "defective",
+    "confidence": 74.87,
+    "defect_probability": 74.87,
+    "cnn_defect_probability": 98.46,
+    "cv_defect_probability": 4.1,
+    "pipeline": "cnn_cv_hybrid",
+    "source": "camera",
+    "time": "2026-03-12T10:56:13.354494",
+    "inference_ms": 3578.4,
+    "admin_note": "",
+    "request_id": "15b62f9c-6e2e-4194-8861-c7bb9285de62"
+  },
+  {
+    "id": "bad7878c-c488-4b56-bace-14f70d3391e6",
+    "owner": "KLgw0yAnIxTG61oMT8SvAyFRgFD3",
+    "filename": "WhatsApp_Image_2026-03-10_at_8.50.01_PM.jpeg",
+    "label": "defective",
+    "confidence": 75.96,
+    "defect_probability": 75.96,
+    "cnn_defect_probability": 91.57,
+    "cv_defect_probability": 29.15,
+    "pipeline": "cnn_cv_hybrid",
+    "source": "upload",
+    "time": "2026-03-12T10:56:50.935230",
+    "inference_ms": 160.34,
+    "admin_note": "",
+    "request_id": "791cc8ff-c150-450f-a6dd-0aa95b1c0e45",
+    "updated_at": "2026-03-12T10:56:55.871798"
   }
 ]
