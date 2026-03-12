@@ -7,11 +7,8 @@ import os
 import time
 import uuid
 import logging
-import json
-import tempfile
 import threading
 from collections import defaultdict, deque
-from datetime import datetime
 from flask import Flask, request, jsonify, send_from_directory, g
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
@@ -34,16 +31,12 @@ app.config["MAX_CONTENT_LENGTH"] = int(os.environ.get("MAX_UPLOAD_MB", "16")) * 
 
 # Path to frontend build (Vite `dist`) — sibling folder to backend
 FRONTEND_DIST = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "frontend", "dist"))
-RECORDS_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "saved_model", "scan_records.json")
-RECORD_LOCK = threading.Lock()
 
 RATE_LIMIT_WINDOW_SEC = int(os.environ.get("PREDICT_RATE_WINDOW_SEC", "60"))
 RATE_LIMIT_MAX_REQUESTS = int(os.environ.get("PREDICT_RATE_MAX_REQUESTS", "30"))
 _PREDICT_RATE_BUCKETS: dict[str, deque] = defaultdict(deque)
 _RATE_LOCK = threading.Lock()
 
-VALID_LABELS = {"defective", "non_defective"}
-MAX_NOTE_LEN = int(os.environ.get("ADMIN_NOTE_MAX_LEN", "500"))
 DEFECT_THRESHOLD_PERCENT = float(os.environ.get("DEFECT_THRESHOLD_PERCENT", "60"))
 
 
@@ -79,36 +72,6 @@ def _check_predict_rate_limit() -> tuple[bool, int]:
 
         bucket.append(now)
         return True, 0
-
-
-def _load_records():
-    with RECORD_LOCK:
-        if not os.path.exists(RECORDS_PATH):
-            return []
-        try:
-            with open(RECORDS_PATH, "r", encoding="utf-8") as f:
-                data = json.load(f)
-            return data if isinstance(data, list) else []
-        except Exception:
-            logger.exception("Failed to load records file")
-            return []
-
-
-def _save_records(records):
-    os.makedirs(os.path.dirname(RECORDS_PATH), exist_ok=True)
-    with RECORD_LOCK:
-        temp_fd, temp_path = tempfile.mkstemp(
-            prefix="scan_records_",
-            suffix=".json",
-            dir=os.path.dirname(RECORDS_PATH),
-        )
-        try:
-            with os.fdopen(temp_fd, "w", encoding="utf-8") as f:
-                json.dump(records, f, indent=2)
-            os.replace(temp_path, RECORDS_PATH)
-        finally:
-            if os.path.exists(temp_path):
-                os.remove(temp_path)
 
 
 def _to_float(value, default=0.0):
@@ -222,10 +185,6 @@ def predict():
         )
 
     request_id = str(uuid.uuid4())
-    owner = str((request.form.get("owner") or "local")).strip()[:120] or "local"
-    source = str((request.form.get("source") or "upload")).strip().lower()
-    if source not in {"upload", "camera"}:
-        source = "upload"
     filename = secure_filename(file.filename)
     ext = os.path.splitext(filename)[1]
     temp_name = f"{request_id}{ext}"
@@ -250,25 +209,6 @@ def predict():
         result["defect_threshold"] = threshold_percent
 
         inference_ms = round((time.perf_counter() - started_at) * 1000.0, 2)
-
-        records = _load_records()
-        records.append({
-            "id": request_id,
-            "owner": owner,
-            "filename": filename,
-            "label": result.get("label", "unknown"),
-            "confidence": _to_float(result.get("confidence", 0.0)),
-            "defect_probability": _to_float(result.get("defect_probability", 0.0)),
-            "cnn_defect_probability": _to_float(result.get("cnn_defect_probability", 0.0)),
-            "cv_defect_probability": _to_float(result.get("cv_defect_probability", 0.0)),
-            "pipeline": result.get("pipeline", "unknown"),
-            "source": source,
-            "time": datetime.now().isoformat(),
-            "inference_ms": inference_ms,
-            "admin_note": "",
-            "request_id": g.request_id,
-        })
-        _save_records(records)
 
         return jsonify({
             "success": True,
@@ -320,162 +260,6 @@ def model_info():
 
     return jsonify(info)
 
-
-@app.route("/api/admin/records", methods=["GET"])
-def admin_records():
-    """Return all locally persisted scan records for admin portal."""
-    records = sorted(_load_records(), key=lambda item: item.get("time", ""), reverse=True)
-
-    label_filter = (request.args.get("label") or "").strip().lower()
-    owner_filter = (request.args.get("owner") or "").strip()
-    query = (request.args.get("q") or "").strip().lower()
-    limit = int(request.args.get("limit", "200"))
-    offset = int(request.args.get("offset", "0"))
-    limit = max(1, min(1000, limit))
-    offset = max(0, offset)
-
-    if label_filter in VALID_LABELS:
-        records = [record for record in records if record.get("label") == label_filter]
-
-    if owner_filter:
-        records = [record for record in records if str(record.get("owner", "")) == owner_filter]
-
-    if query:
-        records = [
-            record for record in records
-            if query in str(record.get("id", "")).lower()
-            or query in str(record.get("owner", "")).lower()
-            or query in str(record.get("filename", "")).lower()
-        ]
-
-    total_filtered = len(records)
-    page_records = records[offset: offset + limit]
-
-    return jsonify({
-        "success": True,
-        "records": page_records,
-        "meta": {
-            "total_filtered": total_filtered,
-            "limit": limit,
-            "offset": offset,
-        },
-    })
-
-
-@app.route("/api/admin/records", methods=["POST"])
-def admin_create_record():
-    """Create a new admin record directly (used by user sync fallback)."""
-    payload = request.get_json(silent=True) or {}
-    if not isinstance(payload, dict):
-        return _json_error("Invalid JSON payload.", 400, code="invalid_payload")
-
-    label = payload.get("label", "unknown")
-    if label not in VALID_LABELS:
-        return _json_error("Invalid label value.", 400, code="invalid_label")
-
-    owner = str(payload.get("owner", "local")).strip()[:120] or "local"
-    source = str(payload.get("source", "upload")).strip().lower()
-    if source not in {"upload", "camera"}:
-        source = "upload"
-
-    record = {
-        "id": str(uuid.uuid4()),
-        "owner": owner,
-        "filename": str(payload.get("filename", "image"))[:240],
-        "label": label,
-        "confidence": _clamp_percent(payload.get("confidence", 0.0)),
-        "defect_probability": _clamp_percent(payload.get("defect_probability", 0.0)),
-        "cnn_defect_probability": _clamp_percent(payload.get("cnn_defect_probability", 0.0)),
-        "cv_defect_probability": _clamp_percent(payload.get("cv_defect_probability", 0.0)),
-        "pipeline": str(payload.get("pipeline", "cnn_cv_hybrid"))[:60],
-        "source": source,
-        "time": datetime.now().isoformat(),
-        "inference_ms": _to_float(payload.get("inference_ms", 0.0)),
-        "admin_note": str(payload.get("admin_note", payload.get("notes", "")))[:MAX_NOTE_LEN],
-        "request_id": g.request_id,
-    }
-
-    records = _load_records()
-    records.append(record)
-    _save_records(records)
-    return jsonify({"success": True, "record": record}), 201
-
-
-@app.route("/api/admin/summary", methods=["GET"])
-def admin_summary():
-    """Return server-side aggregated summary for admin analytics."""
-    records = _load_records()
-    total = len(records)
-    defective = sum(1 for r in records if r.get("label") == "defective")
-    passed = sum(1 for r in records if r.get("label") == "non_defective")
-    avg_confidence = round(
-        sum(_to_float(r.get("confidence", 0.0)) for r in records) / total,
-        2,
-    ) if total else 0.0
-
-    owner_counts = {}
-    for record in records:
-        owner = record.get("owner", "unknown")
-        owner_counts[owner] = owner_counts.get(owner, 0) + 1
-
-    top_owner = None
-    if owner_counts:
-        owner, count = sorted(owner_counts.items(), key=lambda x: x[1], reverse=True)[0]
-        top_owner = {"owner": owner, "count": count}
-
-    return jsonify({
-        "success": True,
-        "summary": {
-            "total": total,
-            "defective": defective,
-            "passed": passed,
-            "avg_confidence": avg_confidence,
-            "top_owner": top_owner,
-        },
-    })
-
-
-@app.route("/api/admin/records/<record_id>", methods=["PUT"])
-def admin_update_record(record_id):
-    """Update editable fields for a specific record."""
-    payload = request.get_json(silent=True) or {}
-    if not isinstance(payload, dict):
-        return _json_error("Invalid JSON payload.", 400, code="invalid_payload")
-
-    records = _load_records()
-
-    for record in records:
-        if record.get("id") == record_id:
-            label = payload.get("label", record.get("label", "unknown"))
-            if label not in VALID_LABELS:
-                return _json_error("Invalid label value.", 400, code="invalid_label")
-
-            owner = payload.get("owner", record.get("owner", "local"))
-            admin_note = payload.get("admin_note", payload.get("notes", record.get("admin_note", "")))
-
-            record["label"] = label
-            record["owner"] = str(owner)[:120]
-            record["confidence"] = _clamp_percent(payload.get("confidence", record.get("confidence", 0.0)))
-            record["defect_probability"] = _clamp_percent(payload.get("defect_probability", record.get("defect_probability", 0.0)))
-            record["admin_note"] = str(admin_note)[:MAX_NOTE_LEN]
-            record["updated_at"] = datetime.now().isoformat()
-            _save_records(records)
-            return jsonify({"success": True, "record": record})
-
-    return _json_error("Record not found.", 404, code="record_not_found")
-
-
-@app.route("/api/admin/records/<record_id>", methods=["DELETE"])
-def admin_delete_record(record_id):
-    """Delete a specific local admin record."""
-    records = _load_records()
-    updated = [record for record in records if record.get("id") != record_id]
-
-    if len(updated) == len(records):
-        return _json_error("Record not found.", 404, code="record_not_found")
-
-    _save_records(updated)
-    return jsonify({"success": True})
 
 # Keep API routes defined above. After API routes, add a fallback to serve the SPA
 @app.route('/', defaults={'path': ''})

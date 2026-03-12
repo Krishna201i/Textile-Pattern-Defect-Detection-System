@@ -1,0 +1,9 @@
+id,owner,label,confidence,defect_probability,cnn_defect_probability,cv_defect_probability,pipeline,source,filename,image_url,time,admin_note,request_id,inference_ms
+bad7878c-c488-4b56-bace-14f70d3391e6,KLgw0yAnIxTG61oMT8SvAyFRgFD3,defective,75.96,75.96,91.57,29.15,cnn_cv_hybrid,upload,WhatsApp_Image_2026-03-10_at_8.50.01_PM.jpeg,,2026-03-12T10:56:50.935230,,791cc8ff-c150-450f-a6dd-0aa95b1c0e45,160.34
+cf8fe6ac-edd6-42af-9cb8-cb8b0479c46b,KLgw0yAnIxTG61oMT8SvAyFRgFD3,defective,74.87,74.87,98.46,4.1,cnn_cv_hybrid,camera,camera_capture_1773293169667.jpg,,2026-03-12T10:56:13.354494,,15b62f9c-6e2e-4194-8861-c7bb9285de62,3578.4
+5fd6ea75-3b44-4681-a797-5f5cf51d59c0,local,defective,75.25,75.25,0.0,0.0,cnn_cv_hybrid,upload,threshold_verify2.png,,2026-03-10T21:08:35.623168,,2db1be42-6b73-442c-8b6c-5e195391f487,69.89
+80cf0686-df39-4e9e-8ffb-e856f5d80bc5,local,defective,75.25,75.25,0.0,0.0,cnn_cv_hybrid,upload,threshold_verify.png,,2026-03-10T21:07:02.102356,,41e6060c-4320-42af-ab0c-dc1975c7ebd4,70.85
+f1d9880e-6f3e-4baa-a536-d11646b3dbb0,local,defective,75.25,75.25,0.0,0.0,cnn_cv_hybrid,upload,threshold_check_image.png,,2026-03-10T21:00:59.405282,,b0368d83-d816-43b5-8874-e2ecfc7f9e39,110.77
+d3551496-7bab-4230-828e-b005c823fa82,local,defective,75.96,75.96,0.0,0.0,cnn_cv_hybrid,upload,WhatsApp_Image_2026-03-10_at_8.50.01_PM.jpeg,,2026-03-10T20:53:36.051407,,bd061f44-ec96-4410-a995-943c7d8cef80,125.64
+85903b2b-af63-4984-89d0-d73bfa75a3a8,local,defective,75.96,75.96,0.0,0.0,cnn_cv_hybrid,upload,WhatsApp_Image_2026-03-10_at_8.50.01_PM.jpeg,,2026-03-10T20:53:12.122724,,1d9de1a4-839d-42d7-a774-ac0c26b22e7a,162.64
+01893a03-3673-48fc-b262-d26cd0ba30e3,local,defective,75.43,75.43,0.0,0.0,cnn_cv_hybrid,upload,camera_capture_1773154770670.jpg,,2026-03-10T20:29:30.785833,,,87.84

@@ -234,18 +234,22 @@ function App() {
                   </div>
                 )
                 : (
-                  isAdminUser
-                    ? <AdminPage />
-                    : (
-                      <div className="card" style={{ marginTop: 24, maxWidth: 720, textAlign: 'center' }}>
-                        <h3 style={{ marginBottom: 8 }}>Admin Access Required</h3>
-                        <p className="loading-text" style={{ marginBottom: 12 }}>
-                          This account is not mapped as admin. Add your user in Firestore `admins` collection
-                          or set `VITE_ADMIN_EMAILS` in frontend environment.
-                        </p>
-                        <Link to="/" className="btn btn-sm">Go to Dashboard</Link>
-                      </div>
+                  user
+                    ? (
+                      isAdminUser
+                        ? <AdminPage />
+                        : (
+                          <div className="card" style={{ marginTop: 24, maxWidth: 720, textAlign: 'center' }}>
+                            <h3 style={{ marginBottom: 8 }}>Admin Access Required</h3>
+                            <p className="loading-text" style={{ marginBottom: 12 }}>
+                              This account is not mapped as admin. Add your user in Firestore `admins` collection
+                              or set `VITE_ADMIN_EMAILS` in frontend environment.
+                            </p>
+                            <Link to="/" className="btn btn-sm">Go to Dashboard</Link>
+                          </div>
+                        )
                     )
+                    : <Navigate to="/login" replace />
                 )
             }
           />

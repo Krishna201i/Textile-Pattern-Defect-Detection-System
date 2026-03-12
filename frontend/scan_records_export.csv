@@ -1,0 +1,1 @@
+id,owner,label,confidence,defect_probability,cnn_defect_probability,cv_defect_probability,pipeline,source,filename,image_url,time,admin_note,request_id,inference_ms

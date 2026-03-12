@@ -7,7 +7,7 @@ AI-powered textile quality inspection system for binary defect classification (`
 - Predicts defect probability from uploaded or camera-captured fabric images.
 - Uses a **hybrid inference pipeline**: custom CNN + classical CV features (texture/edge-based).
 - Supports user history analytics and admin record management.
-- Keeps user and admin portals synced through shared backend records.
+- Uses Firebase (Firestore + Storage) so user and admin portals share the same scan records.
 
 ## Current Architecture
 
@@ -23,11 +23,10 @@ AI-powered textile quality inspection system for binary defect classification (`
 - Flask API with:
 	- health/model diagnostics
 	- prediction endpoint
-	- admin record CRUD + summary
 	- request tracing headers
 	- upload validation and payload limits
 	- basic rate limiting on prediction endpoint
-	- atomic local JSON record persistence
+	- inference-only (records are stored in Firebase)
 
 ### Frontend
 
@@ -45,6 +44,10 @@ Textile-Pattern-Defect-Detection-System/
 ├── backend/
 │   ├── app.py
 │   ├── requirements.txt
+│   ├── tools/
+│   │   ├── migrate_scan_records.py
+│   │   └── grant_admin.py
+│   │   └── export_scans_csv.py
 │   ├── model/
 │   │   ├── preprocess.py
 │   │   ├── predict.py
@@ -93,7 +96,41 @@ cd backend/model
 python train.py
 ```
 
-### 3) Start Backend
+### 3) Firebase Setup (Required)
+
+- Enable Firestore and Storage in Firebase Console:
+	- Firestore: https://console.firebase.google.com/project/_/firestore
+	- Storage: https://console.firebase.google.com/project/_/storage
+- In Authentication, enable Email/Password if you use email login:
+	- https://console.firebase.google.com/project/_/authentication/providers
+- Deploy the included rules:
+
+```bash
+firebase deploy --only firestore:rules,storage:rules
+```
+
+### 4) (Optional) Migrate Local Records to Firestore
+
+```bash
+set FIREBASE_SERVICE_ACCOUNT_JSON=C:\path\to\service-account.json
+python backend\tools\migrate_scan_records.py
+```
+
+### 5) (Optional) Grant Admin Access (by UID)
+
+```bash
+set FIREBASE_SERVICE_ACCOUNT_JSON=C:\path\to\service-account.json
+python backend\tools\grant_admin.py <FIREBASE_UID>
+```
+
+### 6) (Optional) Export All Scans to CSV
+
+```bash
+set FIREBASE_SERVICE_ACCOUNT_JSON=C:\path\to\service-account.json
+python backend\tools\export_scans_csv.py
+```
+
+### 7) Start Backend
 
 ```bash
 cd backend
@@ -102,7 +139,7 @@ python app.py
 
 Backend runs on `http://127.0.0.1:5000`.
 
-### 4) Start Frontend
+### 8) Start Frontend
 
 ```bash
 cd frontend
@@ -130,13 +167,7 @@ Frontend runs on `http://localhost:3000`.
 
 ### Admin Records
 
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/admin/records` | List records (supports `owner`, `label`, `q`, `limit`, `offset`) |
-| POST | `/api/admin/records` | Create record directly |
-| PUT | `/api/admin/records/<record_id>` | Update record |
-| DELETE | `/api/admin/records/<record_id>` | Delete record |
-| GET | `/api/admin/summary` | Aggregated summary |
+Admin portal reads/writes scan records from Firestore collection `scan_records`.
 
 ## Environment Variables (Backend)
 
