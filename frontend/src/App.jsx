@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, useNavigate, useLocation, Navigate, Link } from "react-router-dom";
-import { FiHome, FiSearch, FiBarChart2, FiInfo } from "react-icons/fi";
+import { FiHome, FiSearch, FiBarChart2, FiInfo, FiUser } from "react-icons/fi";
 import Dock from "./components/Dock";
 import GradientText from "./components/GradientText";
 import Dashboard from "./pages/Dashboard";
 import DetectPage from "./pages/DetectPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
 import AboutPage from "./pages/AboutPage";
+import ProfilePage from "./pages/ProfilePage";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import AdminPage from "./pages/AdminPage";
@@ -14,7 +15,7 @@ import { fetchHistory, savePrediction, clearAllPredictions } from "./firebaseSer
 import { onAuthChange, signOut, isAdmin } from './authService';
 import ProtectedRoute from './components/ProtectedRoute';
 
-function AppContent({ history, addToHistory, clearHistory }) {
+function AppContent({ history, addToHistory, clearHistory, user, onProfileUpdated }) {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -42,6 +43,12 @@ function AppContent({ history, addToHistory, clearHistory }) {
       label: "About",
       onClick: () => navigate("/about"),
       className: location.pathname === "/about" ? "active" : ""
+    },
+    {
+      icon: <FiUser />,
+      label: "Profile",
+      onClick: () => navigate("/profile"),
+      className: location.pathname === "/profile" ? "active" : ""
     }
   ];
 
@@ -53,6 +60,7 @@ function AppContent({ history, addToHistory, clearHistory }) {
           <Route path="/detect" element={<DetectPage onResult={addToHistory} />} />
           <Route path="/analytics" element={<AnalyticsPage history={history} onClearHistory={clearHistory} />} />
           <Route path="/about" element={<AboutPage />} />
+          <Route path="/profile" element={<ProfilePage user={user} history={history} onProfileUpdated={onProfileUpdated} />} />
         </Routes>
       </main>
 
@@ -70,18 +78,15 @@ function AppContent({ history, addToHistory, clearHistory }) {
 
 function App() {
   const [history, setHistory] = useState([]);
-  const [theme, setTheme] = useState(() => {
-    const saved = localStorage.getItem("theme");
-    return saved || "dark";
-  });
   const [user, setUser] = useState(null);
   const [isAdminUser, setIsAdminUser] = useState(false);
   const [authReady, setAuthReady] = useState(false);
   const [adminCheckReady, setAdminCheckReady] = useState(false);
 
   useEffect(() => {
-    document.documentElement.setAttribute("data-theme", theme);
-  }, [theme]);
+    // Enforce single light-mode visual system across the app.
+    document.documentElement.setAttribute("data-theme", "light");
+  }, []);
 
   // Listen to auth state
   useEffect(() => {
@@ -148,6 +153,17 @@ function App() {
     }
   };
 
+  const handleProfileUpdated = (updatedUser) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        displayName: updatedUser?.displayName || '',
+        photoURL: updatedUser?.photoURL || '',
+      };
+    });
+  };
+
   return (
     <BrowserRouter>
       <div className="professional-bg" />
@@ -158,13 +174,15 @@ function App() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <GradientText
               className="app-brand-gradient"
-              colors={['#7aa2ff', '#bcd3ff', '#d9e5ff']}
+              colors={['#5e6a78', '#8f9aa7', '#4f7c97']}
               animationSpeed={10}
               direction="horizontal"
             >
               <h1 style={{ margin: 0, fontSize: 16 }}>TextileGuard</h1>
             </GradientText>
-            <small style={{ color: 'var(--text-muted)' }}>{user ? user.email : 'Not signed in'}</small>
+            <small style={{ color: 'var(--text-muted)' }}>
+              {user ? (user.displayName || user.email) : 'Not signed in'}
+            </small>
           </div>
 
           <div>
@@ -194,14 +212,33 @@ function App() {
                     <p className="loading-text">Checking admin access...</p>
                   </div>
                 )
-                : (isAdminUser ? <AdminPage /> : <Navigate to="/" />)
+                : (
+                  isAdminUser
+                    ? <AdminPage />
+                    : (
+                      <div className="card" style={{ marginTop: 24, maxWidth: 720, textAlign: 'center' }}>
+                        <h3 style={{ marginBottom: 8 }}>Admin Access Required</h3>
+                        <p className="loading-text" style={{ marginBottom: 12 }}>
+                          This account is not mapped as admin. Add your user in Firestore `admins` collection
+                          or set `VITE_ADMIN_EMAILS` in frontend environment.
+                        </p>
+                        <Link to="/" className="btn btn-sm">Go to Dashboard</Link>
+                      </div>
+                    )
+                )
             }
           />
 
           {/* Protected main app routes */}
           <Route path="/*" element={
             <ProtectedRoute user={user} authReady={authReady}>
-              <AppContent history={history} addToHistory={addToHistory} clearHistory={clearHistory} />
+              <AppContent
+                history={history}
+                addToHistory={addToHistory}
+                clearHistory={clearHistory}
+                user={user}
+                onProfileUpdated={handleProfileUpdated}
+              />
             </ProtectedRoute>
           } />
         </Routes>

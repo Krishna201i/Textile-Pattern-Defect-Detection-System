@@ -256,110 +256,112 @@ export default function AdminPage() {
             <p>Try changing search text or filter options.</p>
           </div>
         ) : (
-          <table className="history-table">
-            <thead>
-              <tr>
-                <th>Scan ID</th>
-                <th>Owner</th>
-                <th>Label</th>
-                <th>Confidence</th>
-                <th>Defect %</th>
-                <th>Admin Note</th>
-                <th>Timestamp</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredScans.map((s) => (
-                <tr key={s.id}>
-                  <td className="admin-id-cell">{s.id}</td>
-                  <td>{s.owner || '-'}</td>
-                  <td>
-                    {editingId === s.id ? (
-                      <select
-                        className="admin-edit-input"
-                        value={draft.label}
-                        onChange={(e) => setDraft((prev) => ({ ...prev, label: e.target.value }))}
-                      >
-                        <option value="defective">Defective</option>
-                        <option value="non_defective">Passed</option>
-                      </select>
-                    ) : (
-                      <span className={`result-badge ${s.label === 'defective' ? 'defective' : 'ok'}`}>
-                        {s.label || 'unknown'}
-                      </span>
-                    )}
-                  </td>
-                  <td>
-                    {editingId === s.id ? (
-                      <input
-                        className="admin-edit-input"
-                        type="number"
-                        min="0"
-                        max="100"
-                        value={draft.confidence}
-                        onChange={(e) => setDraft((prev) => ({ ...prev, confidence: e.target.value }))}
-                      />
-                    ) : (
-                      `${Number(s.confidence || 0).toFixed(2)}%`
-                    )}
-                  </td>
-                  <td>
-                    {editingId === s.id ? (
-                      <input
-                        className="admin-edit-input"
-                        type="number"
-                        min="0"
-                        max="100"
-                        value={draft.defect_probability}
-                        onChange={(e) => setDraft((prev) => ({ ...prev, defect_probability: e.target.value }))}
-                      />
-                    ) : (
-                      `${Number(s.defect_probability || 0).toFixed(2)}%`
-                    )}
-                  </td>
-                  <td>
-                    {editingId === s.id ? (
-                      <input
-                        className="admin-edit-input"
-                        type="text"
-                        value={draft.admin_note}
-                        onChange={(e) => setDraft((prev) => ({ ...prev, admin_note: e.target.value }))}
-                        placeholder="Optional note"
-                      />
-                    ) : (
-                      s.admin_note || '-'
-                    )}
-                  </td>
-                  <td>{s.time || '-'}</td>
-                  <td className="admin-actions">
-                    {editingId === s.id ? (
-                      <>
-                        <button className="btn btn-sm" onClick={() => saveEdit(s.id)}>
-                          <FiSave /> Save
-                        </button>
-                        <button className="btn btn-sm btn-outline" onClick={cancelEdit}>
-                          <FiX /> Cancel
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <button className="btn btn-sm" onClick={() => startEdit(s)}>
-                          <FiEdit2 /> Edit
-                        </button>
-                        <button className="btn btn-sm btn-outline" onClick={() => handleDownload(s)}>
-                          <FiDownload /> Open
-                        </button>
-                        <button className="btn btn-sm btn-outline" onClick={() => handleDelete(s)}>
-                          <FiTrash2 /> Delete
-                        </button>
-                      </>
-                    )}
-                  </td>
+          <div className="admin-table-wrap">
+            <table className="history-table">
+              <thead>
+                <tr>
+                  <th>Scan ID</th>
+                  <th>Owner</th>
+                  <th>Label</th>
+                  <th>Confidence</th>
+                  <th>Defect %</th>
+                  <th>Admin Note</th>
+                  <th>Timestamp</th>
+                  <th>Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filteredScans.map((s) => (
+                  <tr key={s.id}>
+                    <td className="admin-id-cell">{s.id}</td>
+                    <td>{s.owner || '-'}</td>
+                    <td>
+                      {editingId === s.id ? (
+                        <select
+                          className="admin-edit-input"
+                          value={draft.label}
+                          onChange={(e) => setDraft((prev) => ({ ...prev, label: e.target.value }))}
+                        >
+                          <option value="defective">Defective</option>
+                          <option value="non_defective">Passed</option>
+                        </select>
+                      ) : (
+                        <span className={`result-badge ${s.label === 'defective' ? 'defective' : 'ok'}`}>
+                          {s.label || 'unknown'}
+                        </span>
+                      )}
+                    </td>
+                    <td>
+                      {editingId === s.id ? (
+                        <input
+                          className="admin-edit-input"
+                          type="number"
+                          min="0"
+                          max="100"
+                          value={draft.confidence}
+                          onChange={(e) => setDraft((prev) => ({ ...prev, confidence: e.target.value }))}
+                        />
+                      ) : (
+                        `${Number(s.confidence || 0).toFixed(2)}%`
+                      )}
+                    </td>
+                    <td>
+                      {editingId === s.id ? (
+                        <input
+                          className="admin-edit-input"
+                          type="number"
+                          min="0"
+                          max="100"
+                          value={draft.defect_probability}
+                          onChange={(e) => setDraft((prev) => ({ ...prev, defect_probability: e.target.value }))}
+                        />
+                      ) : (
+                        `${Number(s.defect_probability || 0).toFixed(2)}%`
+                      )}
+                    </td>
+                    <td>
+                      {editingId === s.id ? (
+                        <input
+                          className="admin-edit-input"
+                          type="text"
+                          value={draft.admin_note}
+                          onChange={(e) => setDraft((prev) => ({ ...prev, admin_note: e.target.value }))}
+                          placeholder="Optional note"
+                        />
+                      ) : (
+                        s.admin_note || '-'
+                      )}
+                    </td>
+                    <td>{s.time || '-'}</td>
+                    <td className="admin-actions">
+                      {editingId === s.id ? (
+                        <>
+                          <button className="btn btn-sm" onClick={() => saveEdit(s.id)}>
+                            <FiSave /> Save
+                          </button>
+                          <button className="btn btn-sm btn-outline" onClick={cancelEdit}>
+                            <FiX /> Cancel
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button className="btn btn-sm" onClick={() => startEdit(s)}>
+                            <FiEdit2 /> Edit
+                          </button>
+                          <button className="btn btn-sm btn-outline" onClick={() => handleDownload(s)}>
+                            <FiDownload /> Open
+                          </button>
+                          <button className="btn btn-sm btn-outline" onClick={() => handleDelete(s)}>
+                            <FiTrash2 /> Delete
+                          </button>
+                        </>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>

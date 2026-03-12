@@ -7,6 +7,8 @@ import {
   onAuthStateChanged,
   sendPasswordResetEmail as fbSendPasswordResetEmail,
   sendEmailVerification as fbSendEmailVerification,
+  updateProfile as fbUpdateProfile,
+  reload,
 } from 'firebase/auth';
 
 export async function signUp(email, password) {
@@ -46,7 +48,31 @@ export async function sendVerificationEmail(user) {
   return fbSendEmailVerification(u);
 }
 
+export async function updateUserProfile(profile) {
+  const user = auth.currentUser;
+  if (!user) throw new Error('No authenticated user');
+
+  const payload = {
+    displayName: (profile?.displayName || '').trim() || null,
+    photoURL: (profile?.photoURL || '').trim() || null,
+  };
+
+  await fbUpdateProfile(user, payload);
+  await reload(user);
+  return auth.currentUser;
+}
+
 export async function isAdmin(uid) {
+  const fallbackEmails = (import.meta.env.VITE_ADMIN_EMAILS || '')
+    .split(',')
+    .map((email) => email.trim().toLowerCase())
+    .filter(Boolean);
+
+  const currentEmail = auth.currentUser?.email?.toLowerCase() || '';
+  if (currentEmail && fallbackEmails.includes(currentEmail)) {
+    return true;
+  }
+
   if (!db) return false;
   try {
     const { doc, getDoc } = await import('firebase/firestore');

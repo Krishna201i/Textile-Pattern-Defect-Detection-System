@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { signIn, sendPasswordReset, isAdmin } from '../authService';
+import { signIn, sendPasswordReset } from '../authService';
 
 export default function LoginPage({ onLogin }) {
   const [email, setEmail] = useState('');
@@ -21,8 +21,7 @@ export default function LoginPage({ onLogin }) {
     try {
       const user = await signIn(email, password);
       if (onLogin) onLogin(user);
-      const admin = await isAdmin(user.uid);
-      navigate(admin ? '/admin' : '/');
+      navigate('/');
     } catch (err) {
       setError(err?.message || 'Login failed');
     } finally {
@@ -62,13 +61,17 @@ export default function LoginPage({ onLogin }) {
             <p className="muted">Sign in to access your dashboard and scan history.</p>
 
             <form onSubmit={handleSubmit}>
-              <label>Email</label>
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="you@example.com" />
+              <div className="auth-field">
+                <label>Email</label>
+                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="you@example.com" />
+              </div>
 
-              <label className="auth-label-spaced">Password</label>
-              <div className="password-field-wrap">
-                <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} required placeholder="Password" />
-                <button type="button" className="btn btn-sm btn-outline password-toggle" onClick={() => setShowPassword(s => !s)}>{showPassword ? 'Hide' : 'Show'}</button>
+              <div className="auth-field">
+                <label>Password</label>
+                <div className="password-field-wrap">
+                  <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} required placeholder="Password" />
+                  <button type="button" className="btn btn-sm btn-outline password-toggle" onClick={() => setShowPassword(s => !s)}>{showPassword ? 'Hide' : 'Show'}</button>
+                </div>
               </div>
 
               <div className="auth-form-meta">

@@ -29,46 +29,62 @@ export default function SignupPage({ onSignup }) {
   };
 
   return (
-    <div className="auth-page modern auth-page-pro">
-      <div className="auth-card modern-card auth-card-pro">
-        <div className="auth-split">
-          <div className="auth-side auth-side-illustration auth-side-pro">
-            <div className="brand auth-brand-pro">
-              <p className="auth-eyebrow">Enterprise Quality Platform</p>
-              <h3 className="auth-brand-title">Create your workspace</h3>
-              <p>Set up your secure account to manage scans and analytics.</p>
+    <div className="auth-page modern auth-page-pro auth-login-redesign">
+      <div className="auth-card modern-card auth-login-card auth-signup-card">
+        <div className="auth-login-hero">
+          <p className="auth-eyebrow">Enterprise Textile Quality Platform</p>
+          <h2 className="auth-hero-title">Create your workspace</h2>
+          <p className="auth-hero-copy">
+            Set up secure access to scan operations, quality analytics, and role-based controls.
+          </p>
+
+          <div className="auth-hero-metrics">
+            <div className="auth-hero-metric">
+              <strong>Centralized History</strong>
+              <span>Shared records across user and admin</span>
             </div>
-            <ul className="auth-side-points">
-              <li>Save and organize scan history</li>
-              <li>Track quality performance over time</li>
-              <li>Access role-based admin capabilities</li>
-            </ul>
+            <div className="auth-hero-metric">
+              <strong>Textile Analytics</strong>
+              <span>Confidence, risk, and source trends</span>
+            </div>
+            <div className="auth-hero-metric">
+              <strong>Secure Workflow</strong>
+              <span>Auth + managed quality operations</span>
+            </div>
           </div>
+        </div>
 
-          <div className="auth-side auth-side-form">
-            <h2>Create account</h2>
-            <p className="muted">Create an account to save scans and access analytics.</p>
+        <div className="auth-login-form-panel auth-signup-form-panel">
+          <h3>Create account</h3>
+          <p className="muted">Create your account to start saving scans and viewing analytics.</p>
 
-            <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit}>
+            <div className="auth-field">
               <label>Email</label>
               <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="you@example.com" />
+            </div>
 
+            <div className="auth-field">
               <label className="auth-label-spaced">Password</label>
               <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required placeholder="Choose a strong password" />
+            </div>
 
+            <div className="auth-field">
               <label className="auth-label-spaced">Confirm password</label>
               <input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} required placeholder="Confirm password" />
-
-              <div className="auth-submit-row">
-                <button type="submit" className="btn btn-primary" disabled={loading}>{loading ? 'Creating...' : 'Create account'}</button>
-              </div>
-
-              {error && <div className="error auth-message">{error}</div>}
-            </form>
-
-            <div className="auth-footer-text">
-              Already have an account? <Link to="/login">Sign in</Link>
             </div>
+
+            <div className="auth-submit-row">
+              <button type="submit" className="btn btn-primary" disabled={loading}>
+                {loading ? 'Creating...' : 'Create account'}
+              </button>
+            </div>
+
+            {error && <div className="error auth-message">{error}</div>}
+          </form>
+
+          <div className="auth-footer-text">
+            Already have an account? <Link to="/login">Sign in</Link>
           </div>
         </div>
       </div>
