@@ -1,0 +1,24 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    match /scan_records/{scanId} {
+      allow read: if isAdmin() || (isSignedIn() && resource.data.owner == request.auth.uid);
+      allow create: if isSignedIn() && request.resource.data.owner == request.auth.uid;
+      allow update, delete: if isAdmin() || (isSignedIn() && resource.data.owner == request.auth.uid);
+    }
+
+    match /admins/{adminId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+  }
+}

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { FiDownload, FiTrash2, FiSearch, FiShield, FiAlertTriangle, FiCheckCircle, FiEdit2, FiSave, FiX } from 'react-icons/fi';
+import { fetchAllScans, updateScanRecord, deleteScanRecord } from '../firebaseService';
 
 export default function AdminPage() {
   const [scans, setScans] = useState([]);
@@ -20,24 +21,9 @@ export default function AdminPage() {
     async function loadAllScans() {
       setLoading(true);
       try {
-        const recordsRes = await fetch('/api/admin/records');
-        const summaryRes = await fetch('/api/admin/summary');
-
-        if (!recordsRes.ok || !summaryRes.ok) {
-          throw new Error('Admin API request failed');
-        }
-
-        const recordsJson = await recordsRes.json();
-        const summaryJson = await summaryRes.json();
-
+        const records = await fetchAllScans();
         if (mounted) {
-          setScans(Array.isArray(recordsJson.records) ? recordsJson.records : []);
-          if (summaryJson?.summary?.top_owner) {
-            setMessage({
-              type: 'info',
-              text: `Top owner by volume: ${summaryJson.summary.top_owner.owner} (${summaryJson.summary.top_owner.count} scans)`,
-            });
-          }
+          setScans(Array.isArray(records) ? records : []);
         }
       } catch (err) {
         if (mounted) setMessage({ type: 'error', text: 'Failed to load scans. Please retry.' });
@@ -52,8 +38,7 @@ export default function AdminPage() {
   const handleDelete = async (scan) => {
     if (!window.confirm(`Delete scan ${scan.id}? This cannot be undone.`)) return;
     try {
-      const res = await fetch(`/api/admin/records/${scan.id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Delete failed');
+      await deleteScanRecord(scan.id);
       // remove from local state
       setScans((prev) => prev.filter((s) => s.id !== scan.id));
       setMessage({ type: 'success', text: 'Scan deleted successfully.' });
@@ -88,12 +73,7 @@ export default function AdminPage() {
         admin_note: draft.admin_note || '',
       };
 
-      const res = await fetch(`/api/admin/records/${scanId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) throw new Error('Update failed');
+      await updateScanRecord(scanId, payload);
 
       setScans((prev) => prev.map((s) => (s.id === scanId ? { ...s, ...payload } : s)));
       setEditingId(null);

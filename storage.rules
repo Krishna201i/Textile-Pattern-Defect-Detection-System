@@ -1,0 +1,17 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    match /scans/{userId}/{fileName} {
+      allow read, write: if isAdmin() || (isSignedIn() && request.auth.uid == userId);
+    }
+  }
+}

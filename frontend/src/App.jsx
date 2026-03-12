@@ -76,6 +76,21 @@ function AppContent({ history, addToHistory, clearHistory, user, onProfileUpdate
   );
 }
 
+function AdminAutoRedirect({ isAdminUser, authReady, adminCheckReady }) {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (!authReady || !adminCheckReady || !isAdminUser) return;
+
+    if (["/", "/login", "/signup"].includes(location.pathname)) {
+      navigate("/admin", { replace: true });
+    }
+  }, [authReady, adminCheckReady, isAdminUser, location.pathname, navigate]);
+
+  return null;
+}
+
 function App() {
   const [history, setHistory] = useState([]);
   const [user, setUser] = useState(null);
@@ -167,6 +182,12 @@ function App() {
   return (
     <BrowserRouter>
       <div className="professional-bg" />
+
+      <AdminAutoRedirect
+        isAdminUser={isAdminUser}
+        authReady={authReady}
+        adminCheckReady={adminCheckReady}
+      />
 
       <div className="app-layout">
         {/* Simple header with sign-in state */}
