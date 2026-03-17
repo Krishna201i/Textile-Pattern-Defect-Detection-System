@@ -56,7 +56,7 @@ function AppContent({ history, addToHistory, clearHistory, user, onProfileUpdate
     <>
       <main className="main-content">
         <Routes>
-          <Route path="/" element={<Dashboard history={history} />} />
+          <Route path="/" element={<Dashboard history={history} user={user} />} />
           <Route path="/detect" element={<DetectPage onResult={addToHistory} />} />
           <Route path="/analytics" element={<AnalyticsPage history={history} onClearHistory={clearHistory} />} />
           <Route path="/about" element={<AboutPage />} />
@@ -191,30 +191,40 @@ function App() {
 
       <div className="app-layout">
         {/* Simple header with sign-in state */}
-        <header className="app-header" style={{ width: '100%', maxWidth: 1200, padding: '12px 40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <header className="app-header" style={{ width: '100%', maxWidth: 1200, padding: '12px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
             <GradientText
               className="app-brand-gradient"
-              colors={['#F59E0B', '#D97706', '#F59E0B']}
+              colors={['#F5A623', '#E09000', '#F5A623']}
               animationSpeed={10}
               direction="horizontal"
             >
-              <h1 style={{ margin: 0, fontSize: 16 }}>TextileGuard</h1>
+              <h1 style={{ margin: 0, fontSize: 17, fontWeight: 800, letterSpacing: '-0.02em' }}>TextileGuard</h1>
             </GradientText>
-            <small style={{ color: 'var(--text-muted)' }}>
-              {user ? (user.displayName || user.email) : 'Not signed in'}
-            </small>
+            {user && (
+              <span style={{
+                padding: '4px 12px',
+                borderRadius: '999px',
+                background: 'rgba(245,166,35,0.08)',
+                border: '1px solid rgba(245,166,35,0.1)',
+                fontSize: '12px',
+                color: 'var(--text-secondary)',
+                fontWeight: 500
+              }}>
+                {user.displayName || user.email}
+              </span>
+            )}
           </div>
 
-          <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             {user ? (
-              <>
-                <button className="btn btn-sm" onClick={() => signOut()}>Sign out</button>
-              </>
+              <button className="btn btn-outline btn-sm" onClick={() => signOut()} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '12px' }}>
+                Sign out
+              </button>
             ) : (
               <div style={{ display: 'flex', gap: 8 }}>
-                <Link to="/login" className="btn btn-sm">Sign in</Link>
-                <Link to="/signup" className="btn btn-sm btn-success">Sign up</Link>
+                <Link to="/login" className="btn btn-outline btn-sm">Sign in</Link>
+                <Link to="/signup" className="btn btn-primary btn-sm">Sign up</Link>
               </div>
             )}
           </div>

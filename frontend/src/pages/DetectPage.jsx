@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { FiXCircle, FiCheckCircle, FiRefreshCw } from "react-icons/fi";
+import { FiXCircle, FiCheckCircle, FiRefreshCw, FiUpload, FiCamera, FiShield, FiSave, FiZap } from "react-icons/fi";
 import ImageUpload from "../components/ImageUpload";
 import CameraCapture from "../components/CameraCapture";
 import ConfidenceGauge from "../components/ConfidenceGauge";
@@ -34,7 +34,6 @@ function DetectPage({ onResult }) {
 
   const handleSave = async () => {
     if (!result) return;
-    // Prepare entry shape expected by savePrediction
     const entry = {
       request_id: result.request_id,
       label: result.label,
@@ -69,37 +68,85 @@ function DetectPage({ onResult }) {
 
   return (
     <div className="fade-in">
-      <div className="page-header">
-        <h2>Detect Defects</h2>
-        <p>Use image upload by default, or capture from camera with quality checks</p>
+      <div className="page-header" style={{ marginBottom: "24px" }}>
+        <h2 style={{
+          fontFamily: '"Space Grotesk", system-ui, sans-serif',
+          fontSize: "clamp(1.4rem, 1.1rem + 0.8vw, 2rem)",
+          fontWeight: 700,
+          letterSpacing: "-0.025em",
+          color: "var(--text-primary)",
+          display: "flex",
+          alignItems: "center",
+          gap: "10px",
+          margin: 0
+        }}>
+          <FiShield style={{ color: "var(--accent)" }} /> Defect Detection
+        </h2>
+        <p style={{ color: "var(--text-secondary)", marginTop: "6px", fontSize: "15px" }}>
+          Upload fabric images or capture live to instantly analyze for defects
+        </p>
       </div>
 
       <div className="content-grid">
         {/* Left: Input Source */}
-        <div className="card">
-          <div className="card-header">
-            <h3>Image Source</h3>
+        <div className="card fade-in-up">
+          <div className="card-header" style={{ marginBottom: "16px" }}>
+            <h3 style={{
+              fontFamily: '"Space Grotesk", system-ui, sans-serif',
+              fontSize: "16px",
+              fontWeight: 600,
+              color: "var(--text-primary)",
+              margin: 0
+            }}>Image Source</h3>
             {(preview || result) && (
-              <button className="btn btn-outline btn-sm" onClick={handleReset}>
-                <FiRefreshCw /> New Scan
+              <button className="btn btn-outline btn-sm" onClick={handleReset} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                <FiRefreshCw size={13} /> New Scan
               </button>
             )}
           </div>
 
-          <div className="detect-source-switch">
+          {/* Source Mode Toggle */}
+          <div className="detect-source-switch" style={{
+            background: "var(--bg-secondary)",
+            borderRadius: "var(--radius-sm)",
+            padding: "4px",
+            display: "inline-flex",
+            gap: "4px",
+            marginBottom: "18px"
+          }}>
             <button
               type="button"
-              className={`btn btn-sm ${sourceMode === "upload" ? "btn-primary" : "btn-outline"}`}
+              className="btn btn-sm"
+              style={{
+                background: sourceMode === "upload" ? "var(--accent)" : "transparent",
+                color: sourceMode === "upload" ? "#0A0A0F" : "var(--text-secondary)",
+                border: "none",
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                fontWeight: sourceMode === "upload" ? 700 : 500,
+                transition: "all 0.2s ease"
+              }}
               onClick={() => switchSourceMode("upload")}
             >
-              Upload Image
+              <FiUpload size={13} /> Upload
             </button>
             <button
               type="button"
-              className={`btn btn-sm ${sourceMode === "camera" ? "btn-primary" : "btn-outline"}`}
+              className="btn btn-sm"
+              style={{
+                background: sourceMode === "camera" ? "var(--accent)" : "transparent",
+                color: sourceMode === "camera" ? "#0A0A0F" : "var(--text-secondary)",
+                border: "none",
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                fontWeight: sourceMode === "camera" ? 700 : 500,
+                transition: "all 0.2s ease"
+              }}
               onClick={() => switchSourceMode("camera")}
             >
-              Camera Capture
+              <FiCamera size={13} /> Camera
             </button>
           </div>
 
@@ -127,31 +174,62 @@ function DetectPage({ onResult }) {
             />
           )}
 
+          {/* Image Preview with scanning overlay */}
           {preview && (
-            <div className="preview-section">
-              <img src={preview} alt="Preview" />
-              {filename && <p className="preview-filename">{filename}</p>}
+            <div className="preview-section" style={{ position: "relative", marginTop: "16px" }}>
+              <img src={preview} alt="Preview" style={{
+                borderRadius: "var(--radius-sm)",
+                border: "1px solid var(--border-color)",
+                width: "100%",
+                display: "block"
+              }} />
+              {loading && (
+                <div className="scanning-overlay">
+                  <div className="scanning-line" />
+                  <div style={{
+                    background: "rgba(8,8,13,0.8)",
+                    padding: "10px 20px",
+                    borderRadius: "999px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    color: "var(--accent)",
+                    fontSize: "13px",
+                    fontWeight: 600,
+                    zIndex: 11,
+                    backdropFilter: "blur(8px)"
+                  }}>
+                    <FiZap /> Analyzing...
+                  </div>
+                </div>
+              )}
+              {filename && <p className="preview-filename" style={{ marginTop: "8px", fontSize: "12px", color: "var(--text-muted)" }}>{filename}</p>}
             </div>
           )}
         </div>
 
         {/* Right: Results */}
         <div>
-          {loading && (
-            <div className="card centered-card">
+          {loading && !preview && (
+            <div className="card centered-card fade-in-up">
               <div className="spinner" />
-              <p className="loading-text">Analyzing fabric...</p>
+              <p className="loading-text">Analyzing fabric patterns...</p>
             </div>
           )}
 
           {error && (
-            <div className="error-card">
+            <div className="error-card fade-in-up" style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+              animation: "fadeInUp 0.3s ease forwards"
+            }}>
               <FiXCircle /> {error}
             </div>
           )}
 
           {result && !loading && (
-            <div className="result-card">
+            <div className={`result-card fade-in-up ${isDefective ? "defective-result" : ""}`}>
               <div className="result-status">
                 <span className={`result-badge ${isDefective ? "defective" : "ok"}`}>
                   {isDefective ? <FiXCircle /> : <FiCheckCircle />}
@@ -164,11 +242,14 @@ function DetectPage({ onResult }) {
                 color={isDefective ? "var(--danger)" : "var(--success)"}
               />
 
-              <div className="result-metrics">
+              <div className="result-metrics" style={{ marginTop: "20px" }}>
                 <div className="result-metric">
                   <div className="result-metric-header">
                     <span className="result-metric-label">Defect Probability</span>
-                    <span className="result-metric-value">{result.defect_probability}%</span>
+                    <span className="result-metric-value" style={{
+                      fontFamily: '"JetBrains Mono", monospace',
+                      color: result.defect_probability > 50 ? "var(--danger)" : "var(--success)"
+                    }}>{result.defect_probability}%</span>
                   </div>
                   <div className="progress-bar">
                     <div
@@ -178,10 +259,13 @@ function DetectPage({ onResult }) {
                   </div>
                 </div>
 
-                <div className="result-metric">
+                <div className="result-metric" style={{ marginTop: "16px" }}>
                   <div className="result-metric-header">
                     <span className="result-metric-label">Confidence</span>
-                    <span className="result-metric-value">{result.confidence}%</span>
+                    <span className="result-metric-value" style={{
+                      fontFamily: '"JetBrains Mono", monospace',
+                      color: "var(--accent)"
+                    }}>{result.confidence}%</span>
                   </div>
                   <div className="progress-bar">
                     <div
@@ -191,27 +275,60 @@ function DetectPage({ onResult }) {
                   </div>
                 </div>
               </div>
+
+              {/* Action buttons inside result card */}
+              <div style={{
+                marginTop: "24px",
+                paddingTop: "18px",
+                borderTop: "1px solid var(--border-color)",
+                display: "flex",
+                alignItems: "center",
+                gap: "10px"
+              }}>
+                <button className="btn btn-outline btn-sm" onClick={handleReset} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  <FiRefreshCw size={13} /> Scan Again
+                </button>
+                <button className="btn btn-primary btn-sm" onClick={handleSave} disabled={!canSave} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  <FiSave size={13} /> Save Result
+                </button>
+                {!canSave && <small style={{ color: "var(--text-muted)", fontSize: "11px" }}>Sign in to save</small>}
+              </div>
             </div>
           )}
 
           {!result && !loading && !error && (
-            <div className="card">
-              <div className="empty-state">
-                <FiCheckCircle />
-                <h3>Waiting for image</h3>
-                <p>Upload a fabric image to see detection results</p>
+            <div className="card" style={{
+              textAlign: "center",
+              padding: "56px 24px",
+              background: "linear-gradient(135deg, rgba(22,22,34,0.65), rgba(22,22,34,0.4))"
+            }}>
+              <div style={{
+                width: "64px",
+                height: "64px",
+                borderRadius: "50%",
+                background: "var(--accent-light)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                margin: "0 auto 16px",
+                color: "var(--accent)",
+                fontSize: "24px"
+              }}>
+                <FiShield />
               </div>
+              <h3 style={{
+                fontFamily: '"Space Grotesk", system-ui, sans-serif',
+                fontSize: "18px",
+                fontWeight: 600,
+                color: "var(--text-primary)",
+                margin: "0 0 8px 0"
+              }}>Waiting for Image</h3>
+              <p style={{ color: "var(--text-muted)", fontSize: "14px", lineHeight: "1.5" }}>
+                Upload a fabric image or capture one to see real-time defect analysis
+              </p>
             </div>
           )}
         </div>
-      </div>
-
-      <div className="detect-actions">
-        <button className="btn" onClick={handleReset}>Reset</button>
-        <button className="btn btn-primary" onClick={handleSave} disabled={!canSave}>
-          Save
-        </button>
-        {!canSave && <small className="detect-save-note">Sign in to save scans</small>}
       </div>
     </div>
   );
