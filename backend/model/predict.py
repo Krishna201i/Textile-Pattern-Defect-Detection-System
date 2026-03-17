@@ -109,6 +109,35 @@ def _compute_cv_defect_probability(image_path: str) -> tuple[float, dict]:
     edges = cv2.Canny(image, 80, 160)
     edge_density = float(np.count_nonzero(edges)) / float(edges.size)
 
+    # Patterned Fabric Guard (Quadrant-based approach)
+    # Real defects are localized anomalies, while patterns repeat.
+    # We split the edge map into 4 quadrants and measure edge density consistency.
+    h, w = edges.shape
+    q_h, q_w = h // 2, w // 2
+    quadrants = [
+        edges[0:q_h, 0:q_w], edges[q_h:, 0:q_w],
+        edges[0:q_h, q_w:], edges[q_h:, q_w:]
+    ]
+    densities = [float(np.count_nonzero(q)) / float(q.size) if q.size > 0 else 0 for q in quadrants]
+    mean_density = float(np.mean(densities))
+    var_density = float(np.var(densities))
+
+    # Patterned if high mean density and low variance (meaning it's uniform across the image)
+    # or if the overall laplacian/density is extremely high.
+    is_patterned = (mean_density > 0.05 and var_density < 0.005) or edge_density > 0.15 or laplacian_var > 3000
+
+    if is_patterned:
+        return 0.0, {
+            "cv_available": True,
+            "laplacian_variance": round(laplacian_var, 4),
+            "edge_density": round(edge_density, 4),
+            "mean_quadrant_density": round(mean_density, 4),
+            "quadrant_density_variance": round(var_density, 6),
+            "texture_score": 0.0,
+            "edge_score": 0.0,
+            "note": "Patterned fabric detected; disabled CV heuristics",
+        }
+
     normalized_texture = min(laplacian_var / 1800.0, 1.0)
     normalized_edges = min(edge_density / 0.22, 1.0)
     cv_prob = (0.65 * normalized_texture) + (0.35 * normalized_edges)
@@ -118,6 +147,8 @@ def _compute_cv_defect_probability(image_path: str) -> tuple[float, dict]:
         "cv_available": True,
         "laplacian_variance": round(laplacian_var, 4),
         "edge_density": round(edge_density, 4),
+        "mean_quadrant_density": round(mean_density, 4),
+        "quadrant_density_variance": round(var_density, 6),
         "texture_score": round(normalized_texture, 4),
         "edge_score": round(normalized_edges, 4),
     }
@@ -153,6 +184,12 @@ def predict_image(image_path):
     cnn_defect_prob = 1.0 - cnn_non_defective_prob
 
     cv_defect_prob, cv_details = _compute_cv_defect_probability(image_path)
+
+    # If the fabric is highly patterned, the CNN (trained on plains) will yield many false positives
+    # because it has never seen text/complex prints and treats them as massive anomalies.
+    is_patterned = "Patterned fabric detected" in cv_details.get("note", "")
+    if is_patterned:
+        cnn_defect_prob *= 0.2  # Severely discount the CNN's defect confidence
 
     hybrid_defect_prob = (0.75 * cnn_defect_prob) + (0.25 * cv_defect_prob)
     hybrid_defect_prob = float(max(0.0, min(1.0, hybrid_defect_prob)))
