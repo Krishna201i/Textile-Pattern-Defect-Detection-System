@@ -67,7 +67,11 @@ export async function savePrediction(entry) {
   const user = auth.currentUser;
   if (!user) return null;
 
-  const imageUrl = await uploadPreviewImage(entry.preview, user.uid, entry.filename);
+  // Since Firebase Storage is unavailable on the free plan in some regions,
+  // we are saving the base64 preview image directly into Firestore.
+  // Note: Firestore has a 1MB limit per document.
+  const imageUrl = entry.preview || null;
+
   const basePayload = {
     owner: user.uid,
     label: entry.label || 'unknown',

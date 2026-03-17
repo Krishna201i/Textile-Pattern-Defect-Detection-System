@@ -5,13 +5,8 @@ service firebase.storage {
       return request.auth != null;
     }
 
-    function isAdmin() {
-      return isSignedIn() &&
-        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
-    }
-
     match /scans/{userId}/{fileName} {
-      allow read, write: if isAdmin() || (isSignedIn() && request.auth.uid == userId);
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
     }
   }
 }

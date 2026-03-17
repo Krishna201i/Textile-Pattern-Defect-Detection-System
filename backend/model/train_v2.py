@@ -1,5 +1,5 @@
 """
-TextileGuard Model Training v2 — EfficientNetB0 Transfer Learning
+TextileGuard Model Training v2 - MobileNetV2 Transfer Learning
 
 Two-phase training strategy:
   Phase 1: Feature extraction (backbone frozen, train classifier head)
@@ -17,11 +17,12 @@ import numpy as np
 
 # Suppress TF info logs
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"  # Reduce memory overhead
 
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers, Model
-from tensorflow.keras.applications import EfficientNetB0
+from tensorflow.keras.applications import MobileNetV2
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.callbacks import (
     EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
@@ -45,10 +46,10 @@ REPORT_PATH = os.path.join(SAVED_MODEL_DIR, "evaluation_report.json")
 IMG_SIZE = 224
 BATCH_SIZE = 32
 PHASE1_EPOCHS = 10
-PHASE2_EPOCHS = 20
+PHASE2_EPOCHS = 15
 PHASE1_LR = 1e-3
 PHASE2_LR = 1e-5
-FINE_TUNE_AT = -20  # Unfreeze last 20 layers
+FINE_TUNE_AT = -30  # Unfreeze last 30 layers of MobileNetV2
 LABEL_SMOOTHING = 0.1
 DROPOUT_RATE = 0.5
 L2_WEIGHT = 1e-4
@@ -70,15 +71,15 @@ def build_augmentation_layers():
 
 # ---------- Model ----------
 def build_model(num_classes=1):
-    """Build EfficientNetB0-based binary classifier with data augmentation."""
+    """Build MobileNetV2-based binary classifier with data augmentation."""
     # Input
     inputs = keras.Input(shape=(IMG_SIZE, IMG_SIZE, 3))
 
     # Augmentation (only applied during training)
     augmented = build_augmentation_layers()(inputs, training=True)
 
-    # EfficientNetB0 backbone (ImageNet pretrained)
-    base_model = EfficientNetB0(
+    # MobileNetV2 backbone (ImageNet pretrained)
+    base_model = MobileNetV2(
         include_top=False,
         weights="imagenet",
         input_tensor=augmented,
@@ -104,7 +105,7 @@ def build_model(num_classes=1):
     x = layers.Dropout(DROPOUT_RATE * 0.5)(x)
     outputs = layers.Dense(1, activation="sigmoid", name="prediction")(x)
 
-    model = Model(inputs, outputs, name="textile_defect_efficientnet")
+    model = Model(inputs, outputs, name="textile_defect_mobilenetv2")
     return model, base_model
 
 
@@ -160,15 +161,15 @@ def load_datasets():
 # ---------- Training ----------
 def train():
     print("=" * 60)
-    print("  TextileGuard Model Training v2 — EfficientNetB0")
+    print("  TextileGuard Model Training v2 - MobileNetV2")
     print("=" * 60)
 
     # Load data
-    print("\n📦 Loading datasets...")
+    print("\n[*] Loading datasets...")
     train_ds, val_ds, test_ds = load_datasets()
 
     # Build model
-    print("\n🏗️  Building EfficientNetB0 model...")
+    print("\n[*] Building MobileNetV2 model...")
     model, base_model = build_model()
     model.summary(print_fn=lambda x: print(f"  {x}"))
 
@@ -347,7 +348,7 @@ def train():
     save_training_plot(combined_history, len(history1.history.get("accuracy", [])))
 
     print(f"\n{'='*60}")
-    print(f"  ✅ Training complete!")
+    print(f"  [OK] Training complete!")
     print(f"  Model: {MODEL_PATH}")
     print(f"  Accuracy: {accuracy:.2%} | F1: {f1:.2%}")
     print(f"  Precision: {precision:.2%} | Recall: {recall:.2%}")

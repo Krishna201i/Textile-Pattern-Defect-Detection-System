@@ -179,9 +179,9 @@ def predict_image(image_path):
 
     processed = preprocess_single_image(image_path)
     prediction = model.predict(processed, verbose=0)
-    cnn_non_defective_prob = float(prediction[0][0])
-    cnn_non_defective_prob = float(max(0.0, min(1.0, cnn_non_defective_prob)))
-    cnn_defect_prob = 1.0 - cnn_non_defective_prob
+    cnn_defect_prob = float(prediction[0][0])
+    cnn_defect_prob = float(max(0.0, min(1.0, cnn_defect_prob)))
+    cnn_non_defective_prob = 1.0 - cnn_defect_prob
 
     cv_defect_prob, cv_details = _compute_cv_defect_probability(image_path)
 

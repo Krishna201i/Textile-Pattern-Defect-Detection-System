@@ -1,0 +1,19 @@
+{
+  "test_accuracy": 0.599,
+  "test_precision": 0.5551,
+  "test_recall": 0.9974,
+  "test_f1": 0.7132,
+  "confusion_matrix": {
+    "tn": 77,
+    "fp": 307,
+    "fn": 1,
+    "tp": 383
+  },
+  "test_results": {
+    "accuracy": 0.599,
+    "auc": 0.7364,
+    "loss": 0.7343,
+    "precision": 0.5551,
+    "recall": 0.9974
+  }
+}

@@ -12,6 +12,7 @@ function DetectPage({ onResult }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [filename, setFilename] = useState("");
+  const [saved, setSaved] = useState(false);
 
   const previewRef = useRef(null);
   const filenameRef = useRef("");
@@ -48,6 +49,10 @@ function DetectPage({ onResult }) {
       time: new Date().toLocaleTimeString(),
     };
     await onResult(entry);
+    setSaved(true);
+    setTimeout(() => {
+      setSaved(false);
+    }, 3000);
   };
 
   const handleReset = () => {
@@ -56,6 +61,7 @@ function DetectPage({ onResult }) {
     setLoading(false);
     setError(null);
     setFilename("");
+    setSaved(false);
   };
 
   const isDefective = result?.label === "defective";
@@ -243,9 +249,22 @@ function DetectPage({ onResult }) {
               />
 
               <div className="result-metrics" style={{ marginTop: "20px" }}>
+                <h4 style={{ 
+                  fontSize: "13px", 
+                  textTransform: "uppercase", 
+                  letterSpacing: "0.05em", 
+                  color: "var(--text-muted)", 
+                  marginBottom: "12px",
+                  borderBottom: "1px solid var(--border-color)",
+                  paddingBottom: "8px",
+                  margin: "0 0 12px 0"
+                }}>
+                  Overall Assessment
+                </h4>
+
                 <div className="result-metric">
                   <div className="result-metric-header">
-                    <span className="result-metric-label">Defect Probability</span>
+                    <span className="result-metric-label">Composite Defect Risk</span>
                     <span className="result-metric-value" style={{
                       fontFamily: '"JetBrains Mono", monospace',
                       color: result.defect_probability > 50 ? "var(--danger)" : "var(--success)"
@@ -261,7 +280,7 @@ function DetectPage({ onResult }) {
 
                 <div className="result-metric" style={{ marginTop: "16px" }}>
                   <div className="result-metric-header">
-                    <span className="result-metric-label">Confidence</span>
+                    <span className="result-metric-label">Model Confidence</span>
                     <span className="result-metric-value" style={{
                       fontFamily: '"JetBrains Mono", monospace',
                       color: "var(--accent)"
@@ -273,6 +292,63 @@ function DetectPage({ onResult }) {
                       style={{ width: `${result.confidence}%` }}
                     />
                   </div>
+                </div>
+
+                <h4 style={{ 
+                  fontSize: "13px", 
+                  textTransform: "uppercase", 
+                  letterSpacing: "0.05em", 
+                  color: "var(--text-muted)", 
+                  marginTop: "24px",
+                  marginBottom: "12px",
+                  borderBottom: "1px solid var(--border-color)",
+                  paddingBottom: "8px"
+                }}>
+                  Technical AI Breakdown
+                </h4>
+
+                <div className="result-metric">
+                  <div className="result-metric-header">
+                    <span className="result-metric-label">Neural Network (CNN)</span>
+                    <span className="result-metric-value" style={{ fontFamily: '"JetBrains Mono", monospace' }}>
+                      {result.cnn_defect_probability}%
+                    </span>
+                  </div>
+                  <div className="progress-bar">
+                    <div className="progress-fill" style={{ width: `${result.cnn_defect_probability}%`, background: "var(--text-secondary)" }} />
+                  </div>
+                </div>
+
+                <div className="result-metric" style={{ marginTop: "16px" }}>
+                  <div className="result-metric-header">
+                    <span className="result-metric-label">Structural Vision (CV)</span>
+                    <span className="result-metric-value" style={{ fontFamily: '"JetBrains Mono", monospace' }}>
+                      {result.cv_defect_probability}%
+                    </span>
+                  </div>
+                  <div className="progress-bar">
+                    <div className="progress-fill" style={{ width: `${result.cv_defect_probability}%`, background: "var(--text-secondary)" }} />
+                  </div>
+                </div>
+
+                <div style={{
+                  marginTop: "16px",
+                  padding: "12px",
+                  background: "var(--bg-secondary)",
+                  borderRadius: "var(--radius-sm)",
+                  fontSize: "13px",
+                  lineHeight: "1.5",
+                  color: "var(--text-secondary)",
+                  borderLeft: `3px solid ${isDefective ? "var(--danger)" : "var(--success)"}`
+                }}>
+                  <strong style={{ color: "var(--text-primary)" }}>AI Inspector Note: </strong>
+                  {result.defect_probability > 50 
+                    ? (result.cnn_defect_probability > 70 && result.cv_defect_probability > 70 
+                        ? "Both neural and structural analysis confirm severe fabric defects." 
+                        : "Anomalies detected in fabric pattern structure indicating localized damage.")
+                    : (result.cv_defect_probability > 50 
+                        ? "High structural variance detected, but neural network confirmed it as normal fabric pattern/texture."
+                        : "Fabric structural integrity is normal. No significant anomalies detected.")}
                 </div>
               </div>
 
@@ -330,6 +406,29 @@ function DetectPage({ onResult }) {
           )}
         </div>
       </div>
+
+      {saved && (
+        <div style={{
+          position: "fixed",
+          bottom: "32px",
+          left: "50%",
+          transform: "translateX(-50%)",
+          background: "var(--success)",
+          color: "#000",
+          padding: "12px 24px",
+          borderRadius: "999px",
+          display: "flex",
+          alignItems: "center",
+          gap: "8px",
+          fontWeight: 600,
+          boxShadow: "0 8px 32px rgba(0, 255, 128, 0.25)",
+          zIndex: 999,
+          animation: "fadeInUp 0.3s ease forwards"
+        }}>
+          <FiCheckCircle size={18} />
+          Result Successfully Saved!
+        </div>
+      )}
     </div>
   );
 }
