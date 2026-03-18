@@ -9,6 +9,7 @@ build/
 venv/
 env/
 .env
+*.log
 
 # Model files
 backend/saved_model/*.h5
