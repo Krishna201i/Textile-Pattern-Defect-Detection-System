@@ -13,10 +13,11 @@ AI-powered textile quality inspection system for binary defect classification (`
 
 ### ML Inference
 
-- **Model**: TensorFlow/Keras custom CNN
-- **Preprocessing**: 224x224 RGB normalization
-- **CV fusion**: Laplacian variance + edge density (OpenCV)
-- **Decision threshold**: defect classification threshold configured to 60% by default
+- **Model**: EfficientNetB0 (ImageNet Pretrained) + Transfer Learning
+- **Robustness**: Handles both simple fabrics and patterned/complex fabrics.
+- **Preprocessing**: 224x224 RGB, EfficientNet specific normalization [-1, 1].
+- **CV fusion**: Laplacian variance + edge density (OpenCV) for additional feature extraction.
+- **Decision threshold**: defect classification threshold configured to 60% by default.
 
 ### Backend
 
@@ -46,12 +47,13 @@ Textile-Pattern-Defect-Detection-System/
 │   ├── requirements.txt
 │   ├── tools/
 │   │   ├── migrate_scan_records.py
-│   │   └── grant_admin.py
+│   │   ├── grant_admin.py
 │   │   └── export_scans_csv.py
 │   ├── model/
 │   │   ├── preprocess.py
 │   │   ├── predict.py
-│   │   └── train.py
+│   │   ├── train.py
+│   │   └── train_v2.py
 │   ├── saved_model/
 │   │   ├── textile_defect_model.keras
 │   │   ├── training_history.json
@@ -72,7 +74,13 @@ Textile-Pattern-Defect-Detection-System/
 │   └── test/
 │       ├── defective/
 │       └── non_defective/
-└── notebooks/
+├── tests/
+│   ├── fixtures/
+│   └── test_*.py
+├── data/
+│   └── scan_records_export_after_migration.csv
+├── notebooks/
+└── restart_servers.bat
 ```
 
 ## Setup
