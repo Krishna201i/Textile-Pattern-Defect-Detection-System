@@ -27,7 +27,8 @@ function ImageUpload({ setResult, setPreview, setLoading, setError, setFilename,
       formData.append("source", source);
 
       try {
-        const response = await axios.post("/api/predict", formData, {
+        const apiUrl = import.meta.env.VITE_API_URL || "";
+        const response = await axios.post(`${apiUrl}/api/predict`, formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
 

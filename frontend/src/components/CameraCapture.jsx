@@ -194,7 +194,8 @@ function CameraCapture({
       if (userId) formData.append("owner", userId);
       formData.append("source", source);
 
-      const response = await axios.post("/api/predict", formData, {
+      const apiUrl = import.meta.env.VITE_API_URL || "";
+      const response = await axios.post(`${apiUrl}/api/predict`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
