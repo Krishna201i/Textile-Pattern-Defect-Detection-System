@@ -193,19 +193,20 @@ function DetectPage({ onResult }) {
                 <div className="scanning-overlay">
                   <div className="scanning-line" />
                   <div style={{
-                    background: "rgba(8,8,13,0.8)",
+                    background: "rgba(15, 19, 28, 0.8)",
                     padding: "10px 20px",
                     borderRadius: "999px",
                     display: "flex",
                     alignItems: "center",
                     gap: "8px",
-                    color: "var(--accent)",
+                    color: "var(--primary)",
                     fontSize: "13px",
                     fontWeight: 600,
                     zIndex: 11,
-                    backdropFilter: "blur(8px)"
+                    backdropFilter: "blur(8px)",
+                    border: "1px solid var(--border-glow)"
                   }}>
-                    <FiZap /> Analyzing...
+                    <FiZap /> Analyzing Fabric Topology...
                   </div>
                 </div>
               )}
@@ -376,7 +377,8 @@ function DetectPage({ onResult }) {
             <div className="card" style={{
               textAlign: "center",
               padding: "56px 24px",
-              background: "linear-gradient(135deg, rgba(22,22,34,0.65), rgba(22,22,34,0.4))"
+              background: "linear-gradient(135deg, rgba(192, 193, 255, 0.04), var(--bg-card))",
+              border: "1px solid var(--border-light)"
             }}>
               <div style={{
                 width: "64px",

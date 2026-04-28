@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { FiDownload, FiTrash2, FiSearch, FiShield, FiAlertTriangle, FiCheckCircle, FiEdit2, FiSave, FiX } from 'react-icons/fi';
 import { fetchAllScans, updateScanRecord, deleteScanRecord } from '../firebaseService';
+import PerformanceDashboard from '../components/PerformanceDashboard';
 
 export default function AdminPage() {
   const [scans, setScans] = useState([]);
@@ -153,10 +154,20 @@ export default function AdminPage() {
 
   return (
     <div className="fade-in">
-      <div className="page-header">
-        <h2>Admin Portal</h2>
-        <p>Monitor user scans, review quality outcomes, and manage records.</p>
+      <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div>
+          <h2>Admin Portal</h2>
+          <p>Monitor user scans, review quality outcomes, and manage records.</p>
+        </div>
       </div>
+
+      <div style={{ padding: '24px', background: 'var(--bg-tertiary)', borderRadius: '16px', border: '1px solid var(--border-light)', marginBottom: '32px' }}>
+         <PerformanceDashboard />
+      </div>
+
+      <h3 style={{ fontFamily: '"Space Grotesk", system-ui, sans-serif', fontSize: '1.25rem', margin: '0 0 16px 0', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <FiShield style={{ color: 'var(--text-muted)' }} /> Scan Records Analytics
+      </h3>
 
       <div className="stats-grid admin-section-gap">
         <div className="stat-card">

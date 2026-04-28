@@ -13,6 +13,7 @@ from flask import Flask, request, jsonify, send_from_directory, g
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
 from PIL import Image, UnidentifiedImageError
+import psutil
 from model.predict import predict_image, get_system_diagnostics
 
 app = Flask(__name__)
@@ -39,6 +40,14 @@ _RATE_LOCK = threading.Lock()
 
 DEFECT_THRESHOLD_PERCENT = float(os.environ.get("DEFECT_THRESHOLD_PERCENT", "60"))
 
+# Global metrics for /api/performance
+_SERVER_START_TIME = time.time()
+_METRICS = {
+    "total_requests": 0,
+    "total_errors": 0,
+    "latency_history": deque(maxlen=100) # Keep last 100 requests for quick average
+}
+_METRICS_LOCK = threading.Lock()
 
 def _json_error(
     message: str,
@@ -159,8 +168,17 @@ def after_request(response):
     response.headers["X-Request-ID"] = getattr(g, "request_id", "")
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
+    
     elapsed_ms = round((time.perf_counter() - getattr(g, "started_at", time.perf_counter())) * 1000.0, 2)
     response.headers["X-Response-Time-Ms"] = str(elapsed_ms)
+    
+    # Track metrics
+    with _METRICS_LOCK:
+        _METRICS["total_requests"] += 1
+        _METRICS["latency_history"].append(elapsed_ms)
+        if response.status_code >= 400:
+            _METRICS["total_errors"] += 1
+            
     return response
 
 
@@ -445,6 +463,37 @@ def model_info():
 
     return jsonify(info)
 
+
+@app.route("/api/performance", methods=["GET"])
+def performance_metrics():
+    """Return system and API performance metrics."""
+    with _METRICS_LOCK:
+        total_reqs = _METRICS["total_requests"]
+        total_errs = _METRICS["total_errors"]
+        lat_hist = list(_METRICS["latency_history"])
+        
+    avg_latency = sum(lat_hist) / len(lat_hist) if lat_hist else 0.0
+    
+    cpu_percent = psutil.cpu_percent(interval=0.1)
+    memory = psutil.virtual_memory()
+    uptime = time.time() - _SERVER_START_TIME
+
+    return jsonify({
+        "status": "ok",
+        "system": {
+            "cpu_percent": cpu_percent,
+            "memory_percent": memory.percent,
+            "memory_used_mb": round(memory.used / (1024 * 1024), 2),
+            "memory_total_mb": round(memory.total / (1024 * 1024), 2),
+            "uptime_seconds": round(uptime, 2)
+        },
+        "api": {
+            "total_requests": total_reqs,
+            "total_errors": total_errs,
+            "avg_latency_ms": round(avg_latency, 2),
+            "error_rate_percent": round((total_errs / max(total_reqs, 1)) * 100, 2)
+        }
+    })
 
 # ── Status Dashboard HTML ──────────────────────────────────────────────────────
 

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, useNavigate, useLocation, Navigate, Link } from "react-router-dom";
-import { FiHome, FiSearch, FiBarChart2, FiInfo, FiUser } from "react-icons/fi";
-import Dock from "./components/Dock";
+import Sidebar from "./components/Sidebar";
 import GradientText from "./components/GradientText";
 import Dashboard from "./pages/Dashboard";
 import DetectPage from "./pages/DetectPage";
@@ -16,45 +15,13 @@ import { onAuthChange, signOut, isAdmin } from './authService';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function AppContent({ history, addToHistory, clearHistory, user, onProfileUpdated }) {
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  const dockItems = [
-    {
-      icon: <FiHome />,
-      label: "Dashboard",
-      onClick: () => navigate("/"),
-      className: location.pathname === "/" ? "active" : ""
-    },
-    {
-      icon: <FiSearch />,
-      label: "Detect",
-      onClick: () => navigate("/detect"),
-      className: location.pathname === "/detect" ? "active" : ""
-    },
-    {
-      icon: <FiBarChart2 />,
-      label: "Analytics",
-      onClick: () => navigate("/analytics"),
-      className: location.pathname === "/analytics" ? "active" : ""
-    },
-    {
-      icon: <FiInfo />,
-      label: "About",
-      onClick: () => navigate("/about"),
-      className: location.pathname === "/about" ? "active" : ""
-    },
-    {
-      icon: <FiUser />,
-      label: "Profile",
-      onClick: () => navigate("/profile"),
-      className: location.pathname === "/profile" ? "active" : ""
-    }
-  ];
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <>
-      <main className="main-content">
+    <div style={{ display: 'flex', minHeight: '100vh', width: '100%' }}>
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} user={user} />
+      
+      <main className="main-content" style={{ flex: 1, paddingLeft: 'var(--sidebar-width)' }}>
         <Routes>
           <Route path="/" element={<Dashboard history={history} user={user} />} />
           <Route path="/detect" element={<DetectPage onResult={addToHistory} />} />
@@ -63,16 +30,7 @@ function AppContent({ history, addToHistory, clearHistory, user, onProfileUpdate
           <Route path="/profile" element={<ProfilePage user={user} history={history} onProfileUpdated={onProfileUpdated} />} />
         </Routes>
       </main>
-
-      <div className="dock-wrapper">
-        <Dock
-          items={dockItems}
-          panelHeight={68}
-          baseItemSize={50}
-          magnification={70}
-        />
-      </div>
-    </>
+    </div>
   );
 }
 
@@ -191,25 +149,27 @@ function App() {
 
       <div className="app-layout">
         {/* Simple header with sign-in state */}
-        <header className="app-header" style={{ width: '100%', maxWidth: 1200, padding: '12px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <header className="app-header" style={{ width: '100%', padding: '16px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative', zIndex: 10 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
             <GradientText
               className="app-brand-gradient"
-              colors={['#F5A623', '#E09000', '#F5A623']}
+              colors={['#c0c1ff', '#8083ff', '#c0c1ff']}
               animationSpeed={10}
               direction="horizontal"
             >
-              <h1 style={{ margin: 0, fontSize: 17, fontWeight: 800, letterSpacing: '-0.02em' }}>TextileGuard</h1>
+              <h1 style={{ margin: 0, fontSize: 18, fontWeight: 800, letterSpacing: '-0.02em', letterSpacing: '-0.02em' }}>LumiWeave</h1>
             </GradientText>
             {user && (
               <span style={{
                 padding: '4px 12px',
                 borderRadius: '999px',
-                background: 'rgba(245,166,35,0.08)',
-                border: '1px solid rgba(245,166,35,0.1)',
-                fontSize: '12px',
-                color: 'var(--text-secondary)',
-                fontWeight: 500
+                background: 'rgba(192, 193, 255, 0.08)',
+                border: '1px solid rgba(192, 193, 255, 0.15)',
+                fontSize: '11px',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                color: 'var(--primary)',
+                fontWeight: 600
               }}>
                 {user.displayName || user.email}
               </span>

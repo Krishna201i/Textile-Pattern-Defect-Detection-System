@@ -60,14 +60,14 @@ function AnalyticsPage({ history, onClearHistory }) {
       y: h.defect_probability,
       z: 100, // Dot size
       name: h.filename || `Scan ${h.index}`,
-      fill: h.label === 'defective' ? '#EF4444' : '#10B981',
+      fill: h.label === 'defective' ? '#ffb4ab' : '#10B981',
       label: h.label
     }));
 
     const pieData = total > 0
       ? [{ name: "Defective", value: defects }, { name: "Passed", value: passed }]
       : [{ name: "No Data", value: 1 }];
-    const PIE_COLORS = total > 0 ? ["#EF4444", "#10B981"] : ["#181824"];
+    const PIE_COLORS = total > 0 ? ["#ffb4ab", "#10B981"] : ["#181c24"];
 
     // Generate Dynamic Insights
     const insights = [];
@@ -208,7 +208,8 @@ function AnalyticsPage({ history, onClearHistory }) {
         <div className="card" style={{
           textAlign: "center",
           padding: "56px 24px",
-          background: "linear-gradient(135deg, rgba(22,22,34,0.65), rgba(22,22,34,0.4))"
+          background: "linear-gradient(135deg, rgba(192, 193, 255, 0.04), var(--bg-card))",
+          border: "1px solid var(--border-light)"
         }}>
           <div style={{
             width: "64px",
@@ -293,15 +294,15 @@ function AnalyticsPage({ history, onClearHistory }) {
                 <ComposedChart data={analyticsData.timelineData}>
                   <defs>
                     <linearGradient id="colorRisk" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#EF4444" stopOpacity={0.4}/>
-                      <stop offset="95%" stopColor="#EF4444" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#ffb4ab" stopOpacity={0.4}/>
+                      <stop offset="95%" stopColor="#ffb4ab" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                   <XAxis dataKey="scan" stroke="var(--text-muted)" fontSize={11} tickMargin={10} axisLine={false} tickLine={false} />
                   <YAxis yAxisId="left" domain={[0, 100]} stroke="var(--text-muted)" fontSize={11} axisLine={false} tickLine={false} tickFormatter={(val) => `${val}%`} />
                   <Tooltip {...tooltipStyle} />
-                  <Area yAxisId="left" type="monotone" dataKey="risk" name="Defect Risk" fill="url(#colorRisk)" stroke="#EF4444" strokeWidth={2} />
+                  <Area yAxisId="left" type="monotone" dataKey="risk" name="Defect Risk" fill="url(#colorRisk)" stroke="#ffb4ab" strokeWidth={2} />
                   <Line yAxisId="left" type="monotone" dataKey="confidence" name="Model Confidence" stroke="#10B981" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
                 </ComposedChart>
               </ResponsiveContainer>
@@ -425,7 +426,7 @@ function AnalyticsPage({ history, onClearHistory }) {
                   <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Passed ({analyticsData.passed})</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{ width: 12, height: 12, borderRadius: 3, background: '#EF4444' }}></div>
+                  <div style={{ width: 12, height: 12, borderRadius: 3, background: '#ffb4ab' }}></div>
                   <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Defective ({analyticsData.defects})</span>
                 </div>
               </div>

@@ -40,7 +40,7 @@ function Dashboard({ history, user }) {
       ]
     : [{ name: "No Data", value: 1 }];
 
-  const PIE_COLORS = total > 0 ? ["#EF4444", "#10B981"] : ["#181824"];
+  const PIE_COLORS = total > 0 ? ["#ffb4ab", "#10B981"] : ["#181c24"];
 
   const recent = [...history].reverse().slice(0, 5);
 
@@ -56,21 +56,21 @@ function Dashboard({ history, user }) {
       <div className="dashboard-content">
         {/* Welcome Banner */}
         <div className="welcome-banner fade-in-up" style={{
-          background: "linear-gradient(135deg, rgba(245,166,35,0.08), rgba(167,139,250,0.04))",
-          border: "1px solid rgba(245,166,35,0.1)",
+          background: "linear-gradient(135deg, rgba(192, 193, 255, 0.08), rgba(208, 188, 255, 0.04))",
+          border: "1px solid rgba(192, 193, 255, 0.15)",
           borderRadius: "var(--radius)",
-          padding: "28px 32px",
-          marginBottom: "28px",
+          padding: "36px 40px",
+          marginBottom: "32px",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
           gap: "20px",
-          backdropFilter: "blur(12px)"
+          backdropFilter: "blur(24px)"
         }}>
           <div>
             <h2 style={{
               fontFamily: '"Space Grotesk", system-ui, sans-serif',
-              fontSize: "clamp(1.4rem, 1rem + 1vw, 2.2rem)",
+              fontSize: "clamp(1.6rem, 1.2rem + 1vw, 2.5rem)",
               fontWeight: 700,
               letterSpacing: "-0.025em",
               color: "var(--text-primary)",
@@ -254,11 +254,11 @@ function Dashboard({ history, user }) {
               </ResponsiveContainer>
               {total > 0 && (
                 <div style={{ display: "flex", justifyContent: "center", gap: "20px", marginTop: "4px" }}>
-                  <span style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", color: "var(--text-secondary)" }}>
-                    <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#EF4444", display: "inline-block" }} />
+                  <span style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", letterSpacing: "0.05em", color: "var(--text-muted)", textTransform: "uppercase" }}>
+                    <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#ffb4ab", display: "inline-block" }} />
                     Defective ({defects})
                   </span>
-                  <span style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", color: "var(--text-secondary)" }}>
+                  <span style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", letterSpacing: "0.05em", color: "var(--text-muted)", textTransform: "uppercase" }}>
                     <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#10B981", display: "inline-block" }} />
                     Passed ({passed})
                   </span>
@@ -268,12 +268,12 @@ function Dashboard({ history, user }) {
 
             {/* Quick Start */}
             <div className="card fade-in-up stagger-6" style={{
-              background: "linear-gradient(135deg, rgba(245,166,35,0.06), rgba(22,22,34,0.65))",
-              border: "1px solid rgba(245,166,35,0.12)",
+              background: "linear-gradient(135deg, rgba(192, 193, 255, 0.04), var(--bg-card))",
+              border: "1px solid rgba(192, 193, 255, 0.12)",
               textAlign: "center",
-              padding: "32px 24px"
+              padding: "40px 24px"
             }}>
-              <FiZap size={32} style={{ color: "var(--accent)", marginBottom: "12px", filter: "drop-shadow(0 0 8px rgba(245,166,35,0.3))" }} />
+              <FiZap size={32} style={{ color: "var(--primary)", margin: "0 auto 16px auto", filter: "drop-shadow(0 0 12px rgba(192,193,255,0.4))" }} />
               <h3 style={{
                 fontFamily: '"Space Grotesk", system-ui, sans-serif',
                 fontSize: "18px",
