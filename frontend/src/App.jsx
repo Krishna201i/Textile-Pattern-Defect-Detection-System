@@ -13,6 +13,7 @@ import AdminPage from "./pages/AdminPage";
 import { fetchHistory, savePrediction, clearAllPredictions } from "./firebaseService";
 import { onAuthChange, signOut, isAdmin } from './authService';
 import ProtectedRoute from './components/ProtectedRoute';
+import PerformancePage from './pages/PerformancePage';
 
 function AppContent({ history, addToHistory, clearHistory, user, onProfileUpdated }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -28,6 +29,7 @@ function AppContent({ history, addToHistory, clearHistory, user, onProfileUpdate
           <Route path="/analytics" element={<AnalyticsPage history={history} onClearHistory={clearHistory} />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/profile" element={<ProfilePage user={user} history={history} onProfileUpdated={onProfileUpdated} />} />
+          <Route path="/performance" element={<PerformancePage />} />
         </Routes>
       </main>
     </div>

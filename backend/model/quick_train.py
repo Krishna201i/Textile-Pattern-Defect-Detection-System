@@ -8,7 +8,7 @@ real training data yet.
 
 Usage:
     cd backend
-    "/Users/minkuu/Documents/krishna project /.venv/bin/python" -u model/quick_train.py --epochs 3 --samples 80 --no-imagenet
+    python -u model/quick_train.py --epochs 3 --samples 80 --no-imagenet
 
 Notes:
 - For faster runs without downloading ImageNet weights, pass --no-imagenet.

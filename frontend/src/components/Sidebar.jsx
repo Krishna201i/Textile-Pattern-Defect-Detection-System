@@ -1,6 +1,6 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
-import { FiHome, FiSearch, FiBarChart2, FiInfo, FiUser, FiAperture } from "react-icons/fi";
+import { FiHome, FiSearch, FiBarChart2, FiInfo, FiUser, FiAperture, FiActivity } from "react-icons/fi";
 import GradientText from "./GradientText";
 
 function Sidebar({ isOpen, onClose, user }) {
@@ -39,6 +39,9 @@ function Sidebar({ isOpen, onClose, user }) {
           </NavLink>
           <NavLink to="/analytics" className={({isActive}) => isActive ? "active" : ""}>
             <FiBarChart2 /> Analytics
+          </NavLink>
+          <NavLink to="/performance" className={({isActive}) => isActive ? "active" : ""}>
+            <FiActivity /> Performance
           </NavLink>
           <NavLink to="/about" className={({isActive}) => isActive ? "active" : ""}>
             <FiInfo /> Model Specs

@@ -1,4 +1,4 @@
-// filepath: /Users/minkuu/Documents/krishna project /Textile-Pattern-Defect-Detection-System/frontend/src/authService.js
+// frontend/src/authService.js — Firebase Authentication helpers
 import { auth, db } from './firebaseClient';
 import {
   createUserWithEmailAndPassword,

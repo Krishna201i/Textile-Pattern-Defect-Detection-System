@@ -35,6 +35,7 @@ function mapRecordToHistoryItem(record) {
   return {
     id: record.id,
     request_id: record.id,
+    owner: record.owner || null,          // FIX: was missing — caused blank owner in CSV export
     label: record.label || 'unknown',
     confidence: Number(record.confidence || 0),
     defect_probability: Number(record.defect_probability || 0),
@@ -45,6 +46,7 @@ function mapRecordToHistoryItem(record) {
     preview: record.image_url || null,
     filename: record.filename || null,
     time: record.time || new Date().toLocaleTimeString(),
+    admin_note: record.admin_note || '',
   };
 }
 
@@ -67,10 +69,13 @@ export async function savePrediction(entry) {
   const user = auth.currentUser;
   if (!user) return null;
 
-  // Since Firebase Storage is unavailable on the free plan in some regions,
-  // we are saving the base64 preview image directly into Firestore.
-  // Note: Firestore has a 1MB limit per document.
-  const imageUrl = entry.preview || null;
+  // Firestore has a 1MB per-document hard limit.
+  // Base64-encoded images can easily exceed this for high-res photos.
+  // FIX: only store the preview if it is under 700KB (safe margin).
+  const MAX_PREVIEW_BYTES = 700 * 1024;
+  const rawPreview = entry.preview || null;
+  const imageUrl =
+    rawPreview && rawPreview.length <= MAX_PREVIEW_BYTES ? rawPreview : null;
 
   const basePayload = {
     owner: user.uid,

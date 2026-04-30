@@ -10,7 +10,8 @@ export default function PerformanceDashboard() {
     let mounted = true;
     const fetchMetrics = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/performance');
+        const apiUrl = import.meta.env.VITE_API_URL || '';
+        const response = await fetch(`${apiUrl}/api/performance`);
         if (!response.ok) throw new Error('API Error');
         const data = await response.json();
         if (mounted) {

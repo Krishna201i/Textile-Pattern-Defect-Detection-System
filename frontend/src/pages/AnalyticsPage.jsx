@@ -5,12 +5,24 @@ import {
   PieChart, Pie, Cell, ScatterChart, Scatter, ZAxis, ComposedChart, Line, Bar, ReferenceLine
 } from "recharts";
 
+// ── Design tokens (avoids scattering hex literals across JSX) ──
+const COLORS = {
+  danger:  'var(--danger, #ffb4ab)',
+  success: 'var(--success, #10B981)',
+  purple:  'var(--accent-purple, #A78BFA)',
+  blue:    'var(--accent-blue, #60A5FA)',
+  accent:  'var(--accent, #6366f1)',
+  warning: 'var(--warning, #F59E0B)',
+};
+const HEADING_FONT = '"Space Grotesk", system-ui, sans-serif';
+const MONO_FONT   = '"JetBrains Mono", monospace';
+
 const tooltipStyle = {
   contentStyle: {
-    background: 'rgba(24,24,36,0.95)',
+    background: 'var(--bg-tooltip, rgba(24,24,36,0.95))',
     border: '1px solid rgba(255,255,255,0.08)',
     borderRadius: '10px',
-    color: '#F5F5F7',
+    color: 'var(--text-primary, #F5F5F7)',
     backdropFilter: 'blur(12px)',
     boxShadow: '0 8px 32px rgba(0,0,0,0.4)'
   }
@@ -60,14 +72,14 @@ function AnalyticsPage({ history, onClearHistory }) {
       y: h.defect_probability,
       z: 100, // Dot size
       name: h.filename || `Scan ${h.index}`,
-      fill: h.label === 'defective' ? '#ffb4ab' : '#10B981',
+      fill: h.label === 'defective' ? COLORS.danger : COLORS.success,
       label: h.label
     }));
 
     const pieData = total > 0
       ? [{ name: "Defective", value: defects }, { name: "Passed", value: passed }]
       : [{ name: "No Data", value: 1 }];
-    const PIE_COLORS = total > 0 ? ["#ffb4ab", "#10B981"] : ["#181c24"];
+    const PIE_COLORS = total > 0 ? [COLORS.danger, COLORS.success] : ['var(--bg-card, #181c24)'];
 
     // Generate Dynamic Insights
     const insights = [];
@@ -150,7 +162,7 @@ function AnalyticsPage({ history, onClearHistory }) {
       <div className="page-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "24px" }}>
         <div>
           <h2 style={{
-            fontFamily: '"Space Grotesk", system-ui, sans-serif',
+            fontFamily: HEADING_FONT,
             fontSize: "clamp(1.4rem, 1.1rem + 0.8vw, 2rem)",
             fontWeight: 700,
             letterSpacing: "-0.025em",
@@ -226,7 +238,7 @@ function AnalyticsPage({ history, onClearHistory }) {
             <FiTrendingUp />
           </div>
           <h3 style={{
-            fontFamily: '"Space Grotesk", system-ui, sans-serif',
+            fontFamily: HEADING_FONT,
             fontSize: "18px",
             fontWeight: 600,
             color: "var(--text-primary)",
@@ -246,7 +258,7 @@ function AnalyticsPage({ history, onClearHistory }) {
           }}>
             <div style={{ padding: "20px" }}>
               <h3 style={{
-                fontFamily: '"Space Grotesk", system-ui, sans-serif',
+                fontFamily: HEADING_FONT,
                 fontSize: "16px",
                 fontWeight: 600,
                 color: "var(--text-primary)",
@@ -278,7 +290,7 @@ function AnalyticsPage({ history, onClearHistory }) {
           <div className="charts-grid" style={{ marginBottom: "20px", gridTemplateColumns: "2fr 1fr" }}>
             <div className="chart-card fade-in-up stagger-3">
               <h3 style={{
-                fontFamily: '"Space Grotesk", system-ui, sans-serif',
+                fontFamily: HEADING_FONT,
                 fontSize: "15px",
                 fontWeight: 600,
                 color: "var(--text-primary)",
@@ -294,7 +306,7 @@ function AnalyticsPage({ history, onClearHistory }) {
                 <ComposedChart data={analyticsData.timelineData}>
                   <defs>
                     <linearGradient id="colorRisk" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#ffb4ab" stopOpacity={0.4}/>
+                      <stop offset="5%" stopColor="#ffb4ab" stopOpacity={0.4}/>{/* SVG gradient: CSS vars unsupported, fallback hex kept */}
                       <stop offset="95%" stopColor="#ffb4ab" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
@@ -302,15 +314,15 @@ function AnalyticsPage({ history, onClearHistory }) {
                   <XAxis dataKey="scan" stroke="var(--text-muted)" fontSize={11} tickMargin={10} axisLine={false} tickLine={false} />
                   <YAxis yAxisId="left" domain={[0, 100]} stroke="var(--text-muted)" fontSize={11} axisLine={false} tickLine={false} tickFormatter={(val) => `${val}%`} />
                   <Tooltip {...tooltipStyle} />
-                  <Area yAxisId="left" type="monotone" dataKey="risk" name="Defect Risk" fill="url(#colorRisk)" stroke="#ffb4ab" strokeWidth={2} />
-                  <Line yAxisId="left" type="monotone" dataKey="confidence" name="Model Confidence" stroke="#10B981" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
+                  <Area yAxisId="left" type="monotone" dataKey="risk" name="Defect Risk" fill="url(#colorRisk)" stroke={COLORS.danger} strokeWidth={2} />
+                  <Line yAxisId="left" type="monotone" dataKey="confidence" name="Model Confidence" stroke={COLORS.success} strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
                 </ComposedChart>
               </ResponsiveContainer>
             </div>
 
             <div className="chart-card fade-in-up stagger-4">
               <h3 style={{
-                fontFamily: '"Space Grotesk", system-ui, sans-serif',
+                fontFamily: HEADING_FONT,
                 fontSize: "15px",
                 fontWeight: 600,
                 color: "var(--text-primary)",
@@ -347,14 +359,14 @@ function AnalyticsPage({ history, onClearHistory }) {
           <div className="charts-grid" style={{ marginBottom: "20px", gridTemplateColumns: "1fr 1fr" }}>
              <div className="chart-card fade-in-up stagger-5">
               <h3 style={{
-                fontFamily: '"Space Grotesk", system-ui, sans-serif',
+                fontFamily: HEADING_FONT,
                 fontSize: "15px",
                 fontWeight: 600,
                 color: "var(--text-primary)",
                 margin: "0 0 16px 0",
                 display: "flex", alignItems: "center", gap: "8px"
               }}>
-                <FiLayers style={{ color: "#A78BFA" }} /> Pipeline Inference Comparison
+                <FiLayers style={{ color: COLORS.purple }} /> Pipeline Inference Comparison
               </h3>
               <p style={{ color: "var(--text-muted)", fontSize: "12px", marginBottom: "16px" }}>
                 Comparing the Neural Network (CNN) vs. Structural Vision (CV) defect assessments over time.
@@ -363,12 +375,12 @@ function AnalyticsPage({ history, onClearHistory }) {
                 <AreaChart data={analyticsData.timelineData}>
                   <defs>
                     <linearGradient id="colorCnn" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#A78BFA" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="#A78BFA" stopOpacity={0.1}/>
+                      <stop offset="5%" stopColor="#A78BFA" stopOpacity={0.8}/>{/* SVG gradient: hex fallback */}
+                      <stop offset="95%" stopColor="#A78BFA" stopOpacity={0.1}/>{/* SVG gradient: hex fallback */}
                     </linearGradient>
                     <linearGradient id="colorCv" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#60A5FA" stopOpacity={0.5}/>
-                      <stop offset="95%" stopColor="#60A5FA" stopOpacity={0.1}/>
+                      <stop offset="5%" stopColor="#60A5FA" stopOpacity={0.5}/>{/* SVG gradient: hex fallback */}
+                      <stop offset="95%" stopColor="#60A5FA" stopOpacity={0.1}/>{/* SVG gradient: hex fallback */}
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
@@ -383,7 +395,7 @@ function AnalyticsPage({ history, onClearHistory }) {
 
             <div className="chart-card fade-in-up stagger-6" style={{ display: 'flex', flexDirection: 'column' }}>
               <h3 style={{
-                fontFamily: '"Space Grotesk", system-ui, sans-serif',
+                fontFamily: HEADING_FONT,
                 fontSize: "15px",
                 fontWeight: 600,
                 color: "var(--text-primary)",
@@ -411,7 +423,7 @@ function AnalyticsPage({ history, onClearHistory }) {
                   textAlign: 'center',
                   pointerEvents: 'none'
                 }}>
-                  <div style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--text-primary)', fontFamily: '"Space Grotesk", sans-serif' }}>
+                  <div style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--text-primary)', fontFamily: HEADING_FONT }}>
                     {analyticsData.total}
                   </div>
                   <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>
@@ -422,11 +434,11 @@ function AnalyticsPage({ history, onClearHistory }) {
               
               <div style={{ display: 'flex', justifyContent: 'center', gap: '24px', marginTop: '16px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{ width: 12, height: 12, borderRadius: 3, background: '#10B981' }}></div>
+                  <div style={{ width: 12, height: 12, borderRadius: 3, background: COLORS.success }}></div>
                   <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Passed ({analyticsData.passed})</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{ width: 12, height: 12, borderRadius: 3, background: '#ffb4ab' }}></div>
+                  <div style={{ width: 12, height: 12, borderRadius: 3, background: COLORS.danger }}></div>
                   <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Defective ({analyticsData.defects})</span>
                 </div>
               </div>
@@ -437,7 +449,7 @@ function AnalyticsPage({ history, onClearHistory }) {
           <div className="card fade-in-up" style={{ animationDelay: "0.4s" }}>
             <div className="card-header" style={{ marginBottom: "16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <h3 style={{
-                fontFamily: '"Space Grotesk", system-ui, sans-serif',
+                fontFamily: HEADING_FONT,
                 fontSize: "15px",
                 fontWeight: 600,
                 color: "var(--text-primary)",
@@ -464,7 +476,7 @@ function AnalyticsPage({ history, onClearHistory }) {
                 <tbody>
                   {[...analyticsData.normalized].reverse().slice(0, 100).map((item, i) => (
                     <tr key={i}>
-                      <td style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: "12px", color: "var(--text-muted)" }}>{analyticsData.total - i}</td>
+                      <td style={{ fontFamily: MONO_FONT, fontSize: "12px", color: "var(--text-muted)" }}>{analyticsData.total - i}</td>
                       <td>
                         {item.preview ? (
                           <img src={item.preview} alt="" className="history-thumb" />
@@ -480,12 +492,12 @@ function AnalyticsPage({ history, onClearHistory }) {
                           {item.label === "defective" ? "Defective" : "Passed"}
                         </span>
                       </td>
-                      <td style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: "13px" }}>{item.confidence}%</td>
-                      <td style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: "13px", color: item.defect_probability > 50 ? "var(--danger)" : "var(--success)" }}>
+                      <td style={{ fontFamily: MONO_FONT, fontSize: "13px" }}>{item.confidence}%</td>
+                      <td style={{ fontFamily: MONO_FONT, fontSize: "13px", color: item.defect_probability > 50 ? "var(--danger)" : "var(--success)" }}>
                         {item.defect_probability}%
                       </td>
-                      <td style={{ fontSize: "12px", fontFamily: '"JetBrains Mono", monospace', color: "var(--text-muted)" }}>
-                        <span style={{ color: "#A78BFA" }}>{item.cnn_defect_probability || '-'}%</span> / <span style={{ color: "#60A5FA" }}>{item.cv_defect_probability || '-'}%</span>
+                      <td style={{ fontSize: "12px", fontFamily: MONO_FONT, color: "var(--text-muted)" }}>
+                        <span style={{ color: COLORS.purple }}>{item.cnn_defect_probability || '-'}%</span> / <span style={{ color: COLORS.blue }}>{item.cv_defect_probability || '-'}%</span>
                       </td>
                       <td style={{ fontSize: "12px", color: "var(--text-muted)" }}>{item.time?.replace(',', '')}</td>
                     </tr>

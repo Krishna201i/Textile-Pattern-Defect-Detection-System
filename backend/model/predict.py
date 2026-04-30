@@ -179,9 +179,14 @@ def predict_image(image_path):
 
     processed = preprocess_single_image(image_path)
     prediction = model.predict(processed, verbose=0)
-    cnn_defect_prob = float(prediction[0][0])
-    cnn_defect_prob = float(max(0.0, min(1.0, cnn_defect_prob)))
-    cnn_non_defective_prob = 1.0 - cnn_defect_prob
+
+    # Keras image_dataset_from_directory assigns labels alphabetically:
+    #   'defective'     → class 0
+    #   'non_defective' → class 1
+    # The sigmoid output = P(class 1) = P(non_defective).
+    # We must INVERT it to obtain P(defective).
+    cnn_non_defective_prob = float(max(0.0, min(1.0, float(prediction[0][0]))))
+    cnn_defect_prob = 1.0 - cnn_non_defective_prob  # FIX: was wrongly using raw output as defect prob
 
     cv_defect_prob, cv_details = _compute_cv_defect_probability(image_path)
 

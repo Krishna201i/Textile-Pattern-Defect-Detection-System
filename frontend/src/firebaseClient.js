@@ -1,5 +1,4 @@
-// filepath: /Users/minkuu/Documents/krishna project /Textile-Pattern-Defect-Detection-System/frontend/src/firebaseClient.js
-// Initialize Firebase and export commonly used services
+// frontend/src/firebaseClient.js — Initialize Firebase and export commonly used services
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
 import { getAuth } from "firebase/auth";

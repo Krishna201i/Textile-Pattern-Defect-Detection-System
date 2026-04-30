@@ -136,7 +136,7 @@ npm install
 npm run dev
 ```
 
-Frontend runs on `http://localhost:5173`.
+Frontend runs on `http://localhost:3000`.
 
 ---
 

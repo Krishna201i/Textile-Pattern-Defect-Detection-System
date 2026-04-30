@@ -12,11 +12,17 @@ random.seed(SEED)
 np.random.seed(SEED)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Default: reduced counts safe for local machines (avoids OOM before TF loads)
+# Use --full flag (or set TEXTILE_FULL_DATASET=1 env var) for the original 2500-image dataset.
+import sys as _sys
+_FULL = '--full' in _sys.argv or os.environ.get('TEXTILE_FULL_DATASET', '') == '1'
+
 SPLITS = {
-    "train": {"defective": 1000, "non_defective": 1000},
-    "test":  {"defective": 250,  "non_defective": 250},
+    "train": {"defective": 1000 if _FULL else 400, "non_defective": 1000 if _FULL else 400},
+    "test":  {"defective":  250 if _FULL else 100, "non_defective":  250 if _FULL else 100},
 }
-IMG_SIZE = 256
+IMG_SIZE = 224  # Match model input size directly (was 256, resized anyway)
 
 # ---------- Perlin noise ----------
 def _fade(t): return 6*t**5 - 15*t**4 + 10*t**3

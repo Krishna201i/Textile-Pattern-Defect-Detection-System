@@ -12,6 +12,7 @@ urllib.request.urlretrieve(url, "pattern_test.jpg")
 
 with open("pattern_test.jpg", "rb") as f:
     files = {"image": f}
-    response = requests.post("http://localhost:5000/api/predict", files=files)
+    api_url = os.environ.get("API_URL", "http://localhost:5000/api/predict")
+    response = requests.post(api_url, files=files)
     
 print(json.dumps(response.json(), indent=2))

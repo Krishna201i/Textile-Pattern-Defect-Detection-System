@@ -1,4 +1,4 @@
-// filepath: /Users/minkuu/Documents/krishna project /Textile-Pattern-Defect-Detection-System/frontend/firebase.rules
+// frontend/firebase.rules
 
 rules_version = '2';
 

@@ -34,7 +34,11 @@ import matplotlib.pyplot as plt
 
 # ---------- Paths ----------
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DATASET_DIR = os.path.join(os.path.dirname(BASE_DIR), "dataset")
+# FIX: was os.path.dirname(BASE_DIR) which went one level too high (outside the project root)
+DATASET_DIR = os.path.join(os.path.dirname(BASE_DIR), "Textile-Pattern-Defect-Detection-System", "dataset")
+# If running from inside the repo directly, use this fallback:
+if not os.path.isdir(DATASET_DIR):
+    DATASET_DIR = os.path.join(BASE_DIR, "..", "dataset")
 SAVED_MODEL_DIR = os.path.join(BASE_DIR, "saved_model")
 MODEL_PATH = os.path.join(SAVED_MODEL_DIR, "textile_defect_model.keras")
 HISTORY_PATH = os.path.join(SAVED_MODEL_DIR, "training_history.json")
@@ -158,6 +162,34 @@ def load_datasets():
     return train_ds, val_ds, test_ds
 
 
+# ---------- Class Weight Computation ----------
+IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".tif", ".webp"}
+
+def compute_class_weights(train_dir):
+    """Compute inverse-frequency class weights to handle class imbalance.
+    Keras image_dataset_from_directory assigns class indices alphabetically:
+      'defective' → 0, 'non_defective' → 1
+    """
+    class_counts = {}
+    for cls in sorted(os.listdir(train_dir)):  # sorted = same order as Keras
+        cls_path = os.path.join(train_dir, cls)
+        if os.path.isdir(cls_path):
+            count = sum(
+                1 for f in os.listdir(cls_path)
+                if os.path.splitext(f)[1].lower() in IMAGE_EXTS
+            )
+            class_counts[cls] = count
+    total = sum(class_counts.values())
+    n_classes = len(class_counts)
+    weights = {
+        i: total / (n_classes * max(1, count))
+        for i, (_, count) in enumerate(class_counts.items())
+    }
+    print(f"  Class counts : {class_counts}")
+    print(f"  Class weights: {weights}")
+    return weights
+
+
 # ---------- Training ----------
 def train():
     print("=" * 60)
@@ -167,6 +199,11 @@ def train():
     # Load data
     print("\n[*] Loading datasets...")
     train_ds, val_ds, test_ds = load_datasets()
+
+    # FIX: compute class weights to correct for class imbalance bias
+    print("\n[*] Computing class weights...")
+    train_dir = os.path.join(DATASET_DIR, "train")
+    class_weight = compute_class_weights(train_dir)
 
     # Build model
     print("\n[*] Building MobileNetV2 model...")
@@ -213,6 +250,7 @@ def train():
         validation_data=val_ds,
         epochs=PHASE1_EPOCHS,
         callbacks=phase1_callbacks,
+        class_weight=class_weight,  # FIX: counteracts class imbalance
     )
 
     # ===== PHASE 2: Fine-Tuning =====
@@ -266,6 +304,7 @@ def train():
         validation_data=val_ds,
         epochs=PHASE2_EPOCHS,
         callbacks=phase2_callbacks,
+        class_weight=class_weight,  # FIX: counteracts class imbalance
     )
 
     # ===== Evaluation =====
