@@ -1,19 +1,19 @@
 {
-  "test_accuracy": 0.599,
-  "test_precision": 0.5551,
-  "test_recall": 0.9974,
-  "test_f1": 0.7132,
+  "test_accuracy": 0.554,
+  "test_precision": 0.5299,
+  "test_recall": 0.956,
+  "test_f1": 0.6819,
   "confusion_matrix": {
-    "tn": 77,
-    "fp": 307,
-    "fn": 1,
-    "tp": 383
+    "tn": 38,
+    "fp": 212,
+    "fn": 11,
+    "tp": 239
   },
   "test_results": {
-    "accuracy": 0.599,
-    "auc": 0.7364,
-    "loss": 0.7343,
-    "precision": 0.5551,
-    "recall": 0.9974
+    "accuracy": 0.554,
+    "auc": 0.6468,
+    "loss": 0.7464,
+    "precision": 0.5299,
+    "recall": 0.956
   }
 }
