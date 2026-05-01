@@ -194,7 +194,7 @@ function CameraCapture({
       if (userId) formData.append("owner", userId);
       formData.append("source", source);
 
-      const apiUrl = import.meta.env.VITE_API_URL || "";
+      const apiUrl = localStorage.getItem("VITE_API_URL") || import.meta.env.VITE_API_URL || "https://textile-backend.onrender.com";
       const response = await axios.post(`${apiUrl}/api/predict`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });

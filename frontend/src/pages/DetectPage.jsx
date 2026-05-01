@@ -93,6 +93,39 @@ function DetectPage({ onResult }) {
         <p style={{ color: "var(--text-secondary)", marginTop: "6px", fontSize: "15px" }}>
           Upload fabric images or capture live to instantly analyze for defects
         </p>
+        <div style={{
+          marginTop: "12px",
+          background: "var(--bg-secondary)",
+          border: "1px solid var(--border-color)",
+          borderRadius: "8px",
+          padding: "10px 14px",
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "12px",
+          maxWidth: "450px",
+          width: "100%"
+        }}>
+          <span style={{ fontSize: "12px", color: "var(--text-muted)", fontWeight: 500, whiteSpace: "nowrap" }}>Backend API:</span>
+          <input
+            type="text"
+            placeholder="e.g. https://textile-backend.onrender.com"
+            defaultValue={localStorage.getItem("VITE_API_URL") || import.meta.env.VITE_API_URL || "https://textile-backend.onrender.com"}
+            onChange={(e) => {
+              localStorage.setItem("VITE_API_URL", e.target.value);
+            }}
+            style={{
+              background: "var(--bg-primary)",
+              border: "1px solid var(--border-color)",
+              borderRadius: "4px",
+              padding: "4px 8px",
+              color: "var(--text-primary)",
+              fontSize: "12px",
+              flex: 1,
+              outline: "none",
+              fontFamily: '"JetBrains Mono", monospace'
+            }}
+          />
+        </div>
       </div>
 
       <div className="content-grid">
