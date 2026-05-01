@@ -819,7 +819,7 @@ body {
 }
 
 .gauge-text-group {
-  transform: rotate(90deg);
+  /* Rotation is now handled directly in ConfidenceGauge.jsx via SVG transform */
 }
 
 .gauge-text {

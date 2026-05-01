@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { FiDownload, FiTrash2, FiSearch, FiShield, FiAlertTriangle, FiCheckCircle, FiEdit2, FiSave, FiX, FiActivity, FiCpu, FiCheckSquare, FiTrendingUp, FiTarget, FiLayers, FiInfo, FiPieChart } from 'react-icons/fi';
+import { FiDownload, FiTrash2, FiSearch, FiShield, FiAlertTriangle, FiCheckCircle, FiEdit2, FiSave, FiX, FiActivity, FiCpu, FiCheckSquare, FiXSquare, FiTrendingUp, FiTarget, FiLayers, FiInfo, FiPieChart } from 'react-icons/fi';
 import { fetchAllScans, updateScanRecord, deleteScanRecord } from '../firebaseService';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -177,6 +177,22 @@ export default function AdminPage() {
       setMessage({ type: 'success', text: `Successfully approved ${selectedIds.size} records.` });
     } catch (err) {
       setMessage({ type: 'error', text: 'Batch approval failed.' });
+    }
+  };
+
+  const handleBatchReject = async () => {
+    if (!window.confirm(`Mark ${selectedIds.size} selected records as Defective?`)) return;
+    try {
+      const updates = Array.from(selectedIds).map(async (id) => {
+        const payload = { label: 'defective', admin_note: 'Batch Rejected' };
+        await updateScanRecord(id, payload);
+      });
+      await Promise.all(updates);
+      setScans(prev => prev.map(s => selectedIds.has(s.id) ? { ...s, label: 'defective', admin_note: 'Batch Rejected' } : s));
+      setSelectedIds(new Set());
+      setMessage({ type: 'success', text: `Successfully rejected ${selectedIds.size} records.` });
+    } catch (err) {
+      setMessage({ type: 'error', text: 'Batch rejection failed.' });
     }
   };
 
@@ -402,6 +418,7 @@ export default function AdminPage() {
             <span style={{ fontSize: '0.9rem', fontWeight: 600, color: '#c0c1ff' }}>{selectedIds.size} records selected</span>
             <div style={{ display: 'flex', gap: '8px' }}>
               <button className="btn btn-sm btn-outline" onClick={handleBatchApprove} style={{ background: 'rgba(52, 211, 153, 0.1)', color: '#34d399', borderColor: 'rgba(52, 211, 153, 0.3)' }}><FiCheckSquare /> Batch Approve</button>
+              <button className="btn btn-sm btn-outline" onClick={handleBatchReject} style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', borderColor: 'rgba(245, 158, 11, 0.3)' }}><FiXSquare /> Batch Reject</button>
               <button className="btn btn-sm btn-outline" onClick={handleBatchDelete} style={{ background: 'rgba(248, 113, 113, 0.1)', color: '#f87171', borderColor: 'rgba(248, 113, 113, 0.3)' }}><FiTrash2 /> Batch Delete</button>
             </div>
           </div>

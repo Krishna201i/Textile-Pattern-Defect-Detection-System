@@ -29,7 +29,7 @@ function ConfidenceGauge({ value, size = 140, strokeWidth = 10, color }) {
           strokeDashoffset={offset}
           style={{ transition: "stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1)" }}
         />
-        <g className="gauge-text-group">
+        <g className="gauge-text-group" transform={`rotate(90, ${size / 2}, ${size / 2})`}>
           <text className="gauge-text" x={size / 2} y={size / 2 - 6}>
             {value}%
           </text>
