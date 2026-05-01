@@ -185,10 +185,13 @@ def predict_image(image_path: str | Path, threshold: float = 0.5, reference_path
         # full=True returns the ssim_map too (range [-1, 1])
         ssim_val, ssim_map = ssim_fn(ref_gray, gray, full=True, data_range=255)
         
-        # SSIM drops are very small even for obvious defects. 
-        # A drop from 1.0 to 0.9 is massive visually. 
-        # We amplify the defect score: a difference of 0.15 gives 100% defect prob.
-        ssim_defect = min(1.0, (1.0 - ssim_val) * 6.0)
+        # SSIM drops are very small globally even for obvious local defects.
+        # Instead of global mean, count pixels that are severely mismatched (SSIM < 0.7)
+        mismatched_pixels = np.sum(ssim_map < 0.7)
+        mismatch_ratio = mismatched_pixels / ssim_map.size
+        
+        # If even 0.3% of the fabric is severely mismatched (like a hole), it's a 100% defect
+        ssim_defect = float(min(1.0, mismatch_ratio * 333.0))
         
         # Generate Heatmap (where ssim_map is low, color is red)
         # ssim_map is in [-1, 1], map to [0, 255]
