@@ -348,10 +348,26 @@ def predict():
             details={"request_id": request_id},
         )
 
+    # ── Save optional reference file ─────────────────────────────────────────
+    ref_filepath = None
+    if "reference" in request.files:
+        ref_file = request.files["reference"]
+        if ref_file and ref_file.filename != "":
+            if allowed_file(ref_file.filename):
+                ref_ext = os.path.splitext(secure_filename(ref_file.filename))[1]
+                ref_temp_name = f"{request_id}_ref{ref_ext}"
+                ref_filepath = os.path.join(app.config["UPLOAD_FOLDER"], ref_temp_name)
+                try:
+                    ref_file.save(ref_filepath)
+                    _validate_image_file(ref_filepath)
+                except Exception as exc:
+                    logger.warning("Failed to save or validate reference file: %s", exc)
+                    ref_filepath = None
+
     # ── Run prediction ───────────────────────────────────────────────────────
     try:
         _validate_image_file(filepath)
-        result = predict_image(filepath)
+        result = predict_image(filepath, reference_path=ref_filepath)
         defect_prob = _clamp_percent(result.get("defect_probability", 0.0))
         threshold_percent = _normalized_threshold_percent()
 
@@ -427,40 +443,26 @@ def predict():
         )
 
     finally:
-        # Always clean up the temporary upload regardless of outcome
         try:
             if os.path.exists(filepath):
                 os.remove(filepath)
+            if ref_filepath and os.path.exists(ref_filepath):
+                os.remove(ref_filepath)
         except OSError as exc:
-            logger.warning("Could not delete temp file %s: %s", filepath, exc)
+            logger.warning("Could not delete temp file: %s", exc)
 
 
 @app.route("/api/model-info", methods=["GET"])
 def model_info():
-    """Return information about the trained model pipeline."""
-    history_path = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)),
-        "saved_model",
-        "training_history.json",
-    )
-
+    """Return information about the analysis pipeline."""
     info = {
-        "model_name": "Custom CNN + Computer Vision Hybrid",
-        "task": "Binary Classification + CV Feature Fusion",
+        "model_name": "OpenCV + SSIM Hybrid",
+        "task": "Structural Similarity + CV Feature Fusion",
         "classes": ["defective", "non_defective"],
-        "input_size": "224x224x3",
-        "cv_features": ["Laplacian texture", "Edge density"],
+        "input_size": "256x256",
+        "cv_features": ["SSIM", "Laplacian variance", "Edge density"],
         "diagnostics": get_system_diagnostics(),
     }
-
-    if os.path.exists(history_path):
-        import json
-        with open(history_path, "r") as f:
-            history = json.load(f)
-        info["training_epochs"] = len(history.get("accuracy", []))
-        info["final_train_accuracy"] = history.get("accuracy", [None])[-1]
-        info["final_val_accuracy"] = history.get("val_accuracy", [None])[-1]
-
     return jsonify(info)
 
 
@@ -514,29 +516,7 @@ def _build_status_html() -> str:
     model_color = "#22c55e" if model_loaded else ("#f59e0b" if model_exists else "#ef4444")
     model_dot = "#22c55e" if model_loaded else ("#f59e0b" if model_exists else "#ef4444")
 
-    # Load training history if available
-    history_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "saved_model", "training_history.json")
-    eval_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "saved_model", "evaluation_report.json")
-    train_acc, val_acc, epochs = "—", "—", "—"
-    test_acc, test_f1, test_auc, test_precision, test_recall = "—", "—", "—", "—", "—"
-
-    if os.path.exists(history_path):
-        with open(history_path) as f:
-            hist = _json.load(f)
-        acc_list = hist.get("accuracy", [])
-        val_acc_list = hist.get("val_accuracy", [])
-        epochs = str(len(acc_list))
-        train_acc = f"{acc_list[-1]*100:.1f}%" if acc_list else "—"
-        val_acc = f"{val_acc_list[-1]*100:.1f}%" if val_acc_list else "—"
-
-    if os.path.exists(eval_path):
-        with open(eval_path) as f:
-            ev = _json.load(f)
-        test_acc      = f"{ev.get('test_accuracy', 0)*100:.1f}%"
-        test_f1       = f"{ev.get('test_f1', 0):.4f}"
-        test_auc      = f"{ev.get('test_results', {}).get('auc', 0):.4f}"
-        test_precision= f"{ev.get('test_precision', 0)*100:.1f}%"
-        test_recall   = f"{ev.get('test_recall', 0)*100:.1f}%"
+    # Removed ML training history variables since the model is fully removed
 
     now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     py_ver = platform.python_version()
@@ -828,7 +808,7 @@ def _build_status_html() -> str:
           <td>OpenCV (CV)</td>
           <td>{'<span class="pill green"><span class="pdot"></span>AVAILABLE</span>' if cv_available else '<span class="pill red"><span class="pdot"></span>UNAVAILABLE</span>'}</td>
         </tr>
-        <tr><td>Architecture</td><td>Custom CNN + CV Hybrid</td></tr>
+        <tr><td>Architecture</td><td>OpenCV + SSIM Hybrid</td></tr>
         <tr><td>Task</td><td>Binary Classification</td></tr>
         <tr><td>Input Shape</td><td>224 × 224 × 3</td></tr>
         <tr><td>Classes</td><td>defective · non_defective</td></tr>
@@ -839,28 +819,7 @@ def _build_status_html() -> str:
 
   </div>
 
-  <!-- Training Metrics (full width) -->
-  <div class="section-card full-width">
-    <h2>📊 Training &amp; Evaluation Metrics <span class="chip">RESULTS</span></h2>
-    <div class="metrics-grid" style="margin-bottom:1.25rem">
-      <div class="metric-box"><div class="mv">{train_acc}</div><div class="mk">Train Accuracy</div></div>
-      <div class="metric-box"><div class="mv">{val_acc}</div><div class="mk">Val Accuracy</div></div>
-      <div class="metric-box"><div class="mv">{epochs}</div><div class="mk">Epochs</div></div>
-      <div class="metric-box"><div class="mv">{test_acc}</div><div class="mk">Test Accuracy</div></div>
-      <div class="metric-box"><div class="mv">{test_f1}</div><div class="mk">F1 Score</div></div>
-      <div class="metric-box"><div class="mv">{test_auc}</div><div class="mk">AUC</div></div>
-    </div>
-
-    <!-- Progress Bars for key metrics -->
-    <div class="prog-wrap">
-      <div class="prog-label"><span>Precision</span><span>{test_precision}</span></div>
-      <div class="prog-bar"><div class="prog-fill" style="width:{test_precision.replace('%','') if '%' in test_precision else '0'}%"></div></div>
-    </div>
-    <div class="prog-wrap" style="margin-top:.6rem">
-      <div class="prog-label"><span>Recall</span><span>{test_recall}</span></div>
-      <div class="prog-bar"><div class="prog-fill" style="width:{test_recall.replace('%','') if '%' in test_recall else '0'}%"></div></div>
-    </div>
-  </div>
+  <!-- (Removed Training Metrics as ML model is no longer used) -->
 
   <!-- API Endpoints -->
   <div class="section-card full-width">
@@ -903,8 +862,7 @@ def _build_status_html() -> str:
 <footer>
   Textile Pattern Defect Detection System &nbsp;·&nbsp;
   <a href="/api/health">/api/health</a> &nbsp;·&nbsp;
-  <a href="/api/model-info">/api/model-info</a>
-  &nbsp;·&nbsp; Built with Flask + TensorFlow
+  &nbsp;·&nbsp; Built with Flask + OpenCV
 </footer>
 
 <!-- Auto-refresh every 30 seconds -->

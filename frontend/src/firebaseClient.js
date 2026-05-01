@@ -7,13 +7,13 @@ import { getStorage } from "firebase/storage";
 
 // Firebase config (provided)
 const firebaseConfig = {
-  apiKey: "AIzaSyD885u3svKsRO6SyIZzqnszae0SckE9AIQ",
-  authDomain: "miniproject-7a962.firebaseapp.com",
-  projectId: "miniproject-7a962",
-  storageBucket: "miniproject-7a962.firebasestorage.app",
-  messagingSenderId: "20764544783",
-  appId: "1:20764544783:web:d5ac97042a87d41082f87a",
-  measurementId: "G-9BPZ1C2QC5",
+  apiKey: "AIzaSyBg1Rk666R0F6tju-qL2TXQbel7gPB1zQ0",
+  authDomain: "pattern-detection-system.firebaseapp.com",
+  projectId: "pattern-detection-system",
+  storageBucket: "pattern-detection-system.firebasestorage.app",
+  messagingSenderId: "963466434993",
+  appId: "1:963466434993:web:5ab675b30ebbdc91058590",
+  measurementId: "G-D78KM8N0X7"
 };
 
 // Initialize app

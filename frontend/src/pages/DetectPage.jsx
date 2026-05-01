@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { FiXCircle, FiCheckCircle, FiRefreshCw, FiUpload, FiCamera, FiShield, FiSave, FiZap } from "react-icons/fi";
+import { FiXCircle, FiCheckCircle, FiRefreshCw, FiUpload, FiCamera, FiShield, FiSave, FiZap, FiImage, FiUploadCloud } from "react-icons/fi";
 import ImageUpload from "../components/ImageUpload";
 import CameraCapture from "../components/CameraCapture";
 import ConfidenceGauge from "../components/ConfidenceGauge";
@@ -9,6 +9,7 @@ function DetectPage({ onResult }) {
   const [sourceMode, setSourceMode] = useState("upload");
   const [result, setResult] = useState(null);
   const [preview, setPreview] = useState(null);
+  const [refPreview, setRefPreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [filename, setFilename] = useState("");
@@ -41,9 +42,9 @@ function DetectPage({ onResult }) {
       confidence: result.confidence,
       defect_probability: result.defect_probability,
       source: sourceMode,
-      pipeline: result.pipeline || "cnn_cv_hybrid",
-      cnn_defect_probability: result.cnn_defect_probability,
-      cv_defect_probability: result.cv_defect_probability,
+      pipeline: result.pipeline || "ssim_cv_hybrid",
+      ssim_defect_probability: result.ssim_defect_probability,
+      feature_defect_probability: result.feature_defect_probability,
       preview,
       filename,
       time: new Date().toLocaleTimeString(),
@@ -58,6 +59,7 @@ function DetectPage({ onResult }) {
   const handleReset = () => {
     setResult(null);
     setPreview(null);
+    setRefPreview(null);
     setLoading(false);
     setError(null);
     setFilename("");
@@ -104,7 +106,7 @@ function DetectPage({ onResult }) {
               color: "var(--text-primary)",
               margin: 0
             }}>Image Source</h3>
-            {(preview || result) && (
+            {(preview || refPreview || result) && (
               <button className="btn btn-outline btn-sm" onClick={handleReset} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                 <FiRefreshCw size={13} /> New Scan
               </button>
@@ -160,6 +162,7 @@ function DetectPage({ onResult }) {
             <ImageUpload
               setResult={handleResult}
               setPreview={handlePreview}
+              setRefPreview={setRefPreview}
               setLoading={setLoading}
               setError={setError}
               setFilename={handleFilename}
@@ -181,36 +184,81 @@ function DetectPage({ onResult }) {
           )}
 
           {/* Image Preview with scanning overlay */}
-          {preview && (
-            <div className="preview-section" style={{ position: "relative", marginTop: "16px" }}>
-              <img src={preview} alt="Preview" style={{
-                borderRadius: "var(--radius-sm)",
-                border: "1px solid var(--border-color)",
-                width: "100%",
-                display: "block"
-              }} />
-              {loading && (
-                <div className="scanning-overlay">
-                  <div className="scanning-line" />
-                  <div style={{
-                    background: "rgba(15, 19, 28, 0.8)",
-                    padding: "10px 20px",
-                    borderRadius: "999px",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    color: "var(--primary)",
-                    fontSize: "13px",
-                    fontWeight: 600,
-                    zIndex: 11,
-                    backdropFilter: "blur(8px)",
-                    border: "1px solid var(--border-glow)"
+          {(preview || refPreview) && (
+            <div className="preview-section" style={{ position: "relative", marginTop: "24px", display: "flex", gap: "16px", alignItems: "flex-start" }}>
+              {refPreview && (
+                <div style={{ flex: 1 }}>
+                  <div style={{ 
+                    display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px", 
+                    fontSize: "11px", fontWeight: 700, letterSpacing: "0.05em", color: "var(--success)", textTransform: "uppercase" 
                   }}>
-                    <FiZap /> Analyzing Fabric Topology...
+                    <FiImage size={12} /> Reference Pattern
                   </div>
+                  <img src={refPreview} alt="Reference Preview" style={{
+                    borderRadius: "var(--radius-sm)",
+                    border: "1px solid var(--border-light)",
+                    width: "100%",
+                    display: "block"
+                  }} />
                 </div>
               )}
-              {filename && <p className="preview-filename" style={{ marginTop: "8px", fontSize: "12px", color: "var(--text-muted)" }}>{filename}</p>}
+              {preview && (
+                <div style={{ flex: 1 }}>
+                  <div style={{ 
+                    display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px", 
+                    fontSize: "11px", fontWeight: 700, letterSpacing: "0.05em", color: "var(--accent)", textTransform: "uppercase" 
+                  }}>
+                    <FiUploadCloud size={12} /> Test Fabric
+                  </div>
+                  <div style={{ position: "relative" }}>
+                    <img src={result?.diff_image ? `data:image/jpeg;base64,${result.diff_image}` : preview} alt="Test Preview" style={{
+                      borderRadius: "var(--radius-sm)",
+                      border: "1px solid var(--accent)",
+                      boxShadow: "0 0 12px rgba(59, 130, 246, 0.15)",
+                      width: "100%",
+                      display: "block"
+                    }} />
+                    {loading && (
+                      <div className="scanning-overlay">
+                        <div className="scanning-line" />
+                      </div>
+                    )}
+                    {result?.diff_image && (
+                      <div style={{
+                        position: "absolute", top: 8, right: 8,
+                        background: "var(--danger)", color: "#fff",
+                        padding: "4px 8px", borderRadius: "4px",
+                        fontSize: "10px", fontWeight: "bold",
+                        letterSpacing: "0.05em", textTransform: "uppercase"
+                      }}>
+                        Heatmap Diff
+                      </div>
+                    )}
+                  </div>
+                  {filename && !result?.diff_image && <p className="preview-filename" style={{ marginTop: "8px", fontSize: "12px", color: "var(--text-muted)", wordBreak: "break-all" }}>{filename}</p>}
+                  {result?.diff_image && <p className="preview-filename" style={{ marginTop: "8px", fontSize: "12px", color: "var(--accent)", wordBreak: "break-all", fontWeight: 600 }}>Visual Difference Highlighted</p>}
+                </div>
+              )}
+              {loading && (
+                <div style={{
+                  position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)",
+                  background: "rgba(15, 19, 28, 0.9)",
+                  padding: "12px 24px",
+                  borderRadius: "999px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  color: "var(--primary)",
+                  fontSize: "14px",
+                  fontWeight: 600,
+                  zIndex: 11,
+                  backdropFilter: "blur(8px)",
+                  border: "1px solid var(--accent)",
+                  boxShadow: "0 4px 24px rgba(0, 0, 0, 0.6)"
+                }}>
+                  <FiZap className="spin-icon" style={{ color: "var(--accent)" }} /> Comparing Structures...
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -305,30 +353,30 @@ function DetectPage({ onResult }) {
                   borderBottom: "1px solid var(--border-color)",
                   paddingBottom: "8px"
                 }}>
-                  Technical AI Breakdown
+                  Technical Breakdown
                 </h4>
 
                 <div className="result-metric">
                   <div className="result-metric-header">
-                    <span className="result-metric-label">Neural Network (CNN)</span>
+                    <span className="result-metric-label">SSIM Match Discrepancy</span>
                     <span className="result-metric-value" style={{ fontFamily: '"JetBrains Mono", monospace' }}>
-                      {result.cnn_defect_probability}%
+                      {result.ssim_defect_probability}%
                     </span>
                   </div>
                   <div className="progress-bar">
-                    <div className="progress-fill" style={{ width: `${result.cnn_defect_probability}%`, background: "var(--text-secondary)" }} />
+                    <div className="progress-fill" style={{ width: `${result.ssim_defect_probability}%`, background: "var(--text-secondary)" }} />
                   </div>
                 </div>
 
                 <div className="result-metric" style={{ marginTop: "16px" }}>
                   <div className="result-metric-header">
-                    <span className="result-metric-label">Structural Vision (CV)</span>
+                    <span className="result-metric-label">Pattern Feature Variance</span>
                     <span className="result-metric-value" style={{ fontFamily: '"JetBrains Mono", monospace' }}>
-                      {result.cv_defect_probability}%
+                      {result.feature_defect_probability}%
                     </span>
                   </div>
                   <div className="progress-bar">
-                    <div className="progress-fill" style={{ width: `${result.cv_defect_probability}%`, background: "var(--text-secondary)" }} />
+                    <div className="progress-fill" style={{ width: `${result.feature_defect_probability}%`, background: "var(--text-secondary)" }} />
                   </div>
                 </div>
 
@@ -342,13 +390,13 @@ function DetectPage({ onResult }) {
                   color: "var(--text-secondary)",
                   borderLeft: `3px solid ${isDefective ? "var(--danger)" : "var(--success)"}`
                 }}>
-                  <strong style={{ color: "var(--text-primary)" }}>AI Inspector Note: </strong>
+                  <strong style={{ color: "var(--text-primary)" }}>System Analysis Note: </strong>
                   {result.defect_probability > 50 
-                    ? (result.cnn_defect_probability > 70 && result.cv_defect_probability > 70 
-                        ? "Both neural and structural analysis confirm severe fabric defects." 
+                    ? (result.ssim_defect_probability > 70 && result.feature_defect_probability > 70 
+                        ? "Both SSIM comparison and structural features confirm severe fabric defects." 
                         : "Anomalies detected in fabric pattern structure indicating localized damage.")
-                    : (result.cv_defect_probability > 50 
-                        ? "High structural variance detected, but neural network confirmed it as normal fabric pattern/texture."
+                    : (result.feature_defect_probability > 50 
+                        ? "High structural variance detected, but overall match confirmed it as an acceptable pattern variation."
                         : "Fabric structural integrity is normal. No significant anomalies detected.")}
                 </div>
               </div>

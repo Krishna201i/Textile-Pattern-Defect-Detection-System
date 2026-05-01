@@ -4,7 +4,7 @@ import Sidebar from "./components/Sidebar";
 import GradientText from "./components/GradientText";
 import Dashboard from "./pages/Dashboard";
 import DetectPage from "./pages/DetectPage";
-import AnalyticsPage from "./pages/AnalyticsPage";
+
 import AboutPage from "./pages/AboutPage";
 import ProfilePage from "./pages/ProfilePage";
 import LoginPage from "./pages/LoginPage";
@@ -13,42 +13,77 @@ import AdminPage from "./pages/AdminPage";
 import { fetchHistory, savePrediction, clearAllPredictions } from "./firebaseService";
 import { onAuthChange, signOut, isAdmin } from './authService';
 import ProtectedRoute from './components/ProtectedRoute';
-import PerformancePage from './pages/PerformancePage';
-
-function AppContent({ history, addToHistory, clearHistory, user, onProfileUpdated }) {
+function AppContent({ history, addToHistory, clearHistory, user, onProfileUpdated, isAdminUser }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarMinimized, setSidebarMinimized] = useState(false);
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', width: '100%' }}>
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} user={user} />
+    <div style={{ display: 'flex', minHeight: '100vh', width: '100%', '--sidebar-width': sidebarMinimized ? '80px' : '250px' }}>
+      <Sidebar 
+        isOpen={sidebarOpen} 
+        onClose={() => setSidebarOpen(false)} 
+        user={user} 
+        isAdminUser={isAdminUser} 
+        isMinimized={sidebarMinimized}
+        onToggleMinimize={() => setSidebarMinimized(!sidebarMinimized)}
+      />
       
       <main className="main-content" style={{ flex: 1, paddingLeft: 'var(--sidebar-width)' }}>
+        <header className="app-header" style={{ width: '100%', padding: '16px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative', zIndex: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <GradientText
+              className="app-brand-gradient"
+              colors={['#c0c1ff', '#8083ff', '#c0c1ff']}
+              animationSpeed={10}
+              direction="horizontal"
+            >
+              <h1 style={{ margin: 0, fontSize: 18, fontWeight: 800, letterSpacing: '-0.02em' }}>LumiWeave</h1>
+            </GradientText>
+            {user && (
+              <span style={{
+                padding: '4px 12px',
+                borderRadius: '999px',
+                background: 'rgba(192, 193, 255, 0.08)',
+                border: '1px solid rgba(192, 193, 255, 0.15)',
+                fontSize: '11px',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                color: 'var(--primary)',
+                fontWeight: 600
+              }}>
+                {user.displayName || user.email}
+              </span>
+            )}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <button className="btn btn-outline btn-sm" onClick={() => signOut()} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '12px' }}>
+              Sign out
+            </button>
+          </div>
+        </header>
+
         <Routes>
           <Route path="/" element={<Dashboard history={history} user={user} />} />
           <Route path="/detect" element={<DetectPage onResult={addToHistory} />} />
-          <Route path="/analytics" element={<AnalyticsPage history={history} onClearHistory={clearHistory} />} />
+
           <Route path="/about" element={<AboutPage />} />
           <Route path="/profile" element={<ProfilePage user={user} history={history} onProfileUpdated={onProfileUpdated} />} />
-          <Route path="/performance" element={<PerformancePage />} />
+          <Route path="/admin" element={
+            isAdminUser ? <AdminPage /> : (
+              <div className="card" style={{ marginTop: 24, maxWidth: 720, textAlign: 'center', margin: '0 auto' }}>
+                <h3 style={{ marginBottom: 8 }}>Admin Access Required</h3>
+                <p className="loading-text" style={{ marginBottom: 12 }}>
+                  This account is not mapped as admin. Add your user in Firestore `admins` collection
+                  or set `VITE_ADMIN_EMAILS` in frontend environment.
+                </p>
+                <Link to="/" className="btn btn-sm">Go to Dashboard</Link>
+              </div>
+            )
+          } />
         </Routes>
       </main>
     </div>
   );
-}
-
-function AdminAutoRedirect({ isAdminUser, authReady, adminCheckReady }) {
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  useEffect(() => {
-    if (!authReady || !adminCheckReady || !isAdminUser) return;
-
-    if (["/", "/login", "/signup"].includes(location.pathname)) {
-      navigate("/admin", { replace: true });
-    }
-  }, [authReady, adminCheckReady, isAdminUser, location.pathname, navigate]);
-
-  return null;
 }
 
 function App() {
@@ -143,88 +178,12 @@ function App() {
     <BrowserRouter>
       <div className="professional-bg" />
 
-      <AdminAutoRedirect
-        isAdminUser={isAdminUser}
-        authReady={authReady}
-        adminCheckReady={adminCheckReady}
-      />
-
       <div className="app-layout">
-        {/* Simple header with sign-in state */}
-        <header className="app-header" style={{ width: '100%', padding: '16px 32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative', zIndex: 10 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <GradientText
-              className="app-brand-gradient"
-              colors={['#c0c1ff', '#8083ff', '#c0c1ff']}
-              animationSpeed={10}
-              direction="horizontal"
-            >
-              <h1 style={{ margin: 0, fontSize: 18, fontWeight: 800, letterSpacing: '-0.02em', letterSpacing: '-0.02em' }}>LumiWeave</h1>
-            </GradientText>
-            {user && (
-              <span style={{
-                padding: '4px 12px',
-                borderRadius: '999px',
-                background: 'rgba(192, 193, 255, 0.08)',
-                border: '1px solid rgba(192, 193, 255, 0.15)',
-                fontSize: '11px',
-                textTransform: 'uppercase',
-                letterSpacing: '0.05em',
-                color: 'var(--primary)',
-                fontWeight: 600
-              }}>
-                {user.displayName || user.email}
-              </span>
-            )}
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            {user ? (
-              <button className="btn btn-outline btn-sm" onClick={() => signOut()} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '12px' }}>
-                Sign out
-              </button>
-            ) : (
-              <div style={{ display: 'flex', gap: 8 }}>
-                <Link to="/login" className="btn btn-outline btn-sm">Sign in</Link>
-                <Link to="/signup" className="btn btn-primary btn-sm">Sign up</Link>
-              </div>
-            )}
-          </div>
-        </header>
 
         <Routes>
           <Route path="/login" element={<LoginPage onLogin={(u) => setUser(u)} />} />
           <Route path="/signup" element={<SignupPage onSignup={(u) => setUser(u)} />} />
-          <Route
-            path="/admin"
-            element={
-              !authReady || !adminCheckReady
-                ? (
-                  <div className="card" style={{ marginTop: 24, textAlign: 'center' }}>
-                    <div className="spinner" />
-                    <p className="loading-text">Checking admin access...</p>
-                  </div>
-                )
-                : (
-                  user
-                    ? (
-                      isAdminUser
-                        ? <AdminPage />
-                        : (
-                          <div className="card" style={{ marginTop: 24, maxWidth: 720, textAlign: 'center' }}>
-                            <h3 style={{ marginBottom: 8 }}>Admin Access Required</h3>
-                            <p className="loading-text" style={{ marginBottom: 12 }}>
-                              This account is not mapped as admin. Add your user in Firestore `admins` collection
-                              or set `VITE_ADMIN_EMAILS` in frontend environment.
-                            </p>
-                            <Link to="/" className="btn btn-sm">Go to Dashboard</Link>
-                          </div>
-                        )
-                    )
-                    : <Navigate to="/login" replace />
-                )
-            }
-          />
+
 
           {/* Protected main app routes */}
           <Route path="/*" element={
@@ -235,6 +194,7 @@ function App() {
                 clearHistory={clearHistory}
                 user={user}
                 onProfileUpdated={handleProfileUpdated}
+                isAdminUser={isAdminUser}
               />
             </ProtectedRoute>
           } />

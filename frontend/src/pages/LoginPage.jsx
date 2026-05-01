@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { signIn, sendPasswordReset } from '../authService';
+import { signIn, sendPasswordReset, isAdmin } from '../authService';
 import { FiShield, FiBarChart2, FiLock, FiEye, FiEyeOff, FiArrowRight } from 'react-icons/fi';
 
 export default function LoginPage({ onLogin }) {
@@ -22,7 +22,12 @@ export default function LoginPage({ onLogin }) {
     try {
       const user = await signIn(email, password);
       if (onLogin) onLogin(user);
-      navigate('/');
+      const isUserAdmin = await isAdmin(user.uid);
+      if (isUserAdmin) {
+        navigate('/admin');
+      } else {
+        navigate('/');
+      }
     } catch (err) {
       setError(err?.message || 'Login failed');
     } finally {

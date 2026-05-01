@@ -143,6 +143,7 @@ body {
   margin: 0 auto;
   padding: 32px 40px 120px;
   min-height: 100vh;
+  transition: padding-left var(--transition);
 }
 
 /* ===== Bottom Dock ===== */
@@ -168,8 +169,45 @@ body {
   display: flex;
   flex-direction: column;
   z-index: 100;
-  transition: transform var(--transition);
+  transition: transform var(--transition), width var(--transition);
 }
+
+/* Minimized State overrides */
+.sidebar.minimized .sidebar-brand {
+  padding: 32px 0 !important;
+  align-items: center !important;
+}
+
+.sidebar.minimized .sidebar-text {
+  opacity: 0;
+  width: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.sidebar.minimized .sidebar-subtitle {
+  display: none;
+}
+
+.sidebar.minimized .sidebar-nav a,
+.sidebar.minimized .sidebar-footer a,
+.sidebar.minimized .sidebar-collapse-btn {
+  justify-content: center;
+  padding: 10px;
+}
+
+.sidebar.minimized .sidebar-nav a svg,
+.sidebar.minimized .sidebar-footer a svg,
+.sidebar.minimized .sidebar-collapse-btn svg {
+  margin: 0;
+}
+
+.sidebar.minimized .sidebar-footer {
+  padding: 24px 8px !important;
+}
+
 
 .sidebar-brand {
   padding: 24px 20px;
@@ -194,6 +232,8 @@ body {
   color: var(--text-muted);
   margin-top: 4px;
   padding-left: 32px;
+  transition: opacity var(--transition);
+  white-space: nowrap;
 }
 
 .sidebar-nav {
@@ -214,6 +254,8 @@ body {
   text-decoration: none;
   font-size: 14px;
   font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
   transition: all var(--transition);
 }
 
@@ -234,6 +276,38 @@ body {
 .sidebar-footer {
   padding: 16px 12px;
   border-top: 1px solid var(--border-color);
+}
+
+.sidebar-footer a,
+.sidebar-collapse-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  transition: all var(--transition);
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  width: 100%;
+  cursor: pointer;
+}
+
+.sidebar-footer a:hover,
+.sidebar-collapse-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.sidebar-footer a.active {
+  background: var(--accent-light);
+  color: var(--accent);
 }
 
 /* ===== Theme Toggle ===== */
