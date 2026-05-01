@@ -58,13 +58,13 @@ function ImageUpload({ setResult, setPreview, setRefPreview, setLoading, setErro
           source,
         });
       } else {
-        setError(response.data.error || "Prediction failed");
+        const errorMsg = response.data.error || "Prediction failed";
+        setError(typeof errorMsg === "object" ? errorMsg.message || errorMsg.error || JSON.stringify(errorMsg) : String(errorMsg));
       }
     } catch (err) {
-      const message =
-        err.response?.data?.error ||
-        "Failed to connect to the server. Make sure the backend is running.";
-      setError(message);
+      const errObj = err.response?.data || {};
+      const errorMsg = errObj.error || errObj.message || err.message || "Failed to connect to the server. Make sure the backend is running.";
+      setError(typeof errorMsg === "object" ? errorMsg.message || errorMsg.error || JSON.stringify(errorMsg) : String(errorMsg));
     } finally {
       setLoading(false);
     }

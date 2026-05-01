@@ -327,22 +327,6 @@ function DetectPage({ onResult }) {
                   </div>
                 </div>
 
-                <div className="result-metric" style={{ marginTop: "16px" }}>
-                  <div className="result-metric-header">
-                    <span className="result-metric-label">Model Confidence</span>
-                    <span className="result-metric-value" style={{
-                      fontFamily: '"JetBrains Mono", monospace',
-                      color: "var(--accent)"
-                    }}>{result.confidence}%</span>
-                  </div>
-                  <div className="progress-bar">
-                    <div
-                      className="progress-fill blue"
-                      style={{ width: `${result.confidence}%` }}
-                    />
-                  </div>
-                </div>
-
                 <h4 style={{ 
                   fontSize: "13px", 
                   textTransform: "uppercase", 
